@@ -20,7 +20,9 @@ import requests
 ACCESS_ROUTES = {
     "meta" : {
         "route_prepend" : "api.stackexchange.com",
-        "route_append" : "&site=stackoverflow",
+        "route_append" : {
+            "site" : "stackoverflow",
+        },
         "filters" : {
             "fromdate" : "filter by oldest age of question",
             "todate" : "filter by youngest age of question",
@@ -86,7 +88,17 @@ def getAPIParams(category, query) -> dict:
     api_params = ACCESS_ROUTES[category][query]['params']
     return api_params
 
-def queryStackOverflow(route, params):
+def getRoutePrepend() -> str:
+    print(type(ACCESS_ROUTES['meta']['route_prepend']))
+    return ACCESS_ROUTES['meta']['route_prepend']
+
+def getRouteAppend() -> dict:
+    return ACCESS_ROUTES['meta']['route_append']
+
+def getFilters() -> dict:
+    return ACCESS_ROUTES['meta']['filters']
+
+def queryStackOverflow(category, query, params):
     pass
 
-getAPIRoute('questions', 'question_by_tag')
+print(getRoutePrepend())
