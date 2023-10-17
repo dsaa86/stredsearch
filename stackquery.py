@@ -1,4 +1,4 @@
-import requests
+import requests, json
 
 # params = {
 #     "client_id" : "27411",
@@ -16,10 +16,12 @@ import requests
 
 # ACCESS TOKEN = nlyaZ4k0mlpD6ythDJuEGw))
 
+# pp = pprint.PrettyPrinter(width=150, compact=True)
+
 
 ACCESS_ROUTES = {
     "meta" : {
-        "route_prepend" : "api.stackexchange.com",
+        "route_prepend" : "https://api.stackexchange.com",
         "route_append" : {
             "site" : "stackoverflow",
         },
@@ -89,16 +91,84 @@ def getAPIParams(category, query) -> dict:
     return api_params
 
 def getRoutePrepend() -> str:
-    print(type(ACCESS_ROUTES['meta']['route_prepend']))
     return ACCESS_ROUTES['meta']['route_prepend']
 
 def getRouteAppend() -> dict:
     return ACCESS_ROUTES['meta']['route_append']
 
-def getFilters() -> dict:
+def getDictOfPossibleFilters() -> dict:
     return ACCESS_ROUTES['meta']['filters']
 
-def queryStackOverflow(category, query, params):
-    pass
+def processUserChosenFilters(filters) -> dict:
+    data = {}
 
-print(getRoutePrepend())
+    if 'page' in filters and filters['page'] != None:
+        data['page'] = filters['page']
+    if 'pagesize' in filters and filters['pagesize'] != None:
+        data['pagesize'] = filters['pagesize']
+    if 'fromdate' in filters and filters['fromdate'] != None:
+        data['fromdate'] = filters['fromdate']
+    if 'todate' in filters and filters['todate'] != None:
+        data['todate'] = filters['todate']
+    if 'order' in filters and filters['order'] != None:
+        data['order'] = filters['order']
+    if 'min' in filters and filters['min'] != None:
+        data['min'] = filters['min']
+    if 'max' in filters and filters['max'] != None:
+        data['max'] = filters['max']
+    if 'sort' in filters and filters['sort'] != None:
+        data['sort'] = filters['sort']
+    if 'tagged' in filters and filters['tagged'] != None:
+        data['tagged'] = filters['tagged']
+
+    return data
+
+def sanitise_stack_overflow_response(json_response):
+
+    question_data_to_check = ['is_answered', 'view_count', 'answer_count', 'score', 'last_activity_date', 'creation_date', 'last_edit_date', 'question_id', 'link', 'title']
+
+    sanitised_data = {}
+
+    for question in json_response['items']:
+
+        question_keys = question.keys()
+        extracted_data = {}
+        extracted_data['tags'] = question['tags']
+
+        owner_details = {
+            'user_id' : question['owner']['user_id'],
+            'display_name' : question['owner']['display_name'],
+        }
+        extracted_data['owner'] = owner_details
+
+        question_details = {}
+
+        for question_data in question_data_to_check:
+        
+            if question_data in question_keys:
+                question_details[question_data] = question[question_data]
+        
+        extracted_data['question'] = question_details
+
+        sanitised_data[question['question_id']] = extracted_data
+
+    return sanitised_data
+
+def queryStackOverflow(category, query, filters) -> dict:
+
+    url = getRoutePrepend() + getAPIRoute(category, query)
+    params = processUserChosenFilters(filters)
+    params['site'] = getRouteAppend()['site']
+
+    query_response = requests.get(url, params)
+
+    json_response = json.loads(query_response.content)
+
+    sanitised_data_for_commit = sanitise_stack_overflow_response(json_response)
+
+    return sanitised_data_for_commit
+
+
+# response = queryStackOverflow('questions', 'question_by_tag', {'tagged' : 'python;java'})
+
+# print(response)

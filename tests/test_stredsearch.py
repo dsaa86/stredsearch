@@ -63,7 +63,7 @@ class TestStackQuery:
         assert 'site' in function_response.keys()
         assert function_response['site'] is 'stackoverflow'
 
-    def test_getFilters(self):
+    def test_getDictOfPossibleFilters(self):
         function_response = stackquery.getFilters()
         filters = ['fromdate', 'todate', 'min', 'max', 'page', 'pagesize', 'order', 'sort']
         all_filters_present = True
@@ -76,3 +76,16 @@ class TestStackQuery:
         assert len(function_response) == len(stackquery.ACCESS_ROUTES['meta']['filters'])
         assert all_filters_present == True
         assert "fromdate" in function_response.keys()
+
+
+    filters = {
+        'page' : '1',
+        'pageSize' : None,
+        'tagged' : "python;java"
+    }
+
+    def test_processUserChosenFilters(self):
+        pass
+
+    def test_sanitise_stack_overflow_response(self):
+        pass
