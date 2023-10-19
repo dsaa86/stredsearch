@@ -11,8 +11,56 @@ from .redditquery import *
 import html5lib
 
 class GetStackoverflowData(APIView):
-    def get(self, request, route, page, pagesize, fromdate, todate, order, min, max, sort, tagged, format=None):
+
+    def processResultsForSerialization(results: dict) -> dict:
         pass
+
+    def removeBlankParams(self, keys_to_delete: list, params_dict: dict) -> dict:
+        for key in keys_to_delete:
+            del params_dict[key]
+
+        return params_dict
+
+    def processFilters(self, params_dict : dict) -> dict:
+        keys_to_delete = []
+        for key, value in params_dict.items():
+            if value == " ":
+                keys_to_delete.append(key)
+
+            if key == 'tagged':
+                params_dict[key] = value.replace(',', ';')
+
+        params_dict = self.removeBlankParams(keys_to_delete, params_dict)
+
+        return params_dict
+
+    def get(self, request, category, query, page, pagesize, fromdate, todate, order, min, max, sort, tagged, format=None):
+
+        params_dict = {
+            'page': page,
+            'pagesize': pagesize,
+            'fromdate': fromdate,
+            'todate': todate,
+            'order': order,
+            'min': min,
+            'max': max,
+            'sort': sort,
+            'tagged': tagged,
+        }
+
+        processed_filters = self.processFilters(params_dict)
+
+        results = queryStackOverflow(category, query, processed_filters)
+
+        # processed_results = self.processResultsForSerialization(results)
+
+        for result in results:
+            print(result)
+            print("""
+
+""")
+
+        return Response()
 
 
 class GetRedditData(APIView):

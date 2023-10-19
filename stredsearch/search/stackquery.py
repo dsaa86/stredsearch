@@ -123,11 +123,11 @@ def processUserChosenFilters(filters) -> dict:
 
     return data
 
-def sanitise_stack_overflow_response(json_response):
+def sanitiseStackOverflowResponse(json_response):
 
     question_data_to_check = ['is_answered', 'view_count', 'answer_count', 'score', 'last_activity_date', 'creation_date', 'last_edit_date', 'question_id', 'link', 'title']
 
-    sanitised_data = {}
+    sanitised_data = []
 
     for question in json_response['items']:
 
@@ -150,21 +150,22 @@ def sanitise_stack_overflow_response(json_response):
         
         extracted_data['question'] = question_details
 
-        sanitised_data[question['question_id']] = extracted_data
+        sanitised_data.append(extracted_data)
 
     return sanitised_data
 
 def queryStackOverflow(category, query, filters) -> dict:
 
     url = getRoutePrepend() + getAPIRoute(category, query)
-    params = processUserChosenFilters(filters)
+    params = filters
+    # params = processUserChosenFilters(filters)
     params['site'] = getRouteAppend()['site']
 
     query_response = requests.get(url, params)
 
     json_response = json.loads(query_response.content)
 
-    sanitised_data_for_commit = sanitise_stack_overflow_response(json_response)
+    sanitised_data_for_commit = sanitiseStackOverflowResponse(json_response)
 
     return sanitised_data_for_commit
 
