@@ -56,12 +56,6 @@ class GetRedditData(APIView):
 
         # subred = '/r/{subredname}'
 
-        # query_params = request.query_params
-
-        # search_terms = self.buildTermsFromParams(query_params.get('q'), query_params.get('type'), query_params.get('limit'))
-
-        # reddit_search_results = self.getRedditTerms(search_terms, query_params.get('subred'))
-
         search_terms = self.buildTermsFromParams(q, type, limit)
 
         subred_list = self.buildSubredFromParams(subred)
@@ -71,8 +65,6 @@ class GetRedditData(APIView):
         for elem in subred_list:
             reddit_search_results = self.getRedditTerms(search_terms, '/r/'+subred)
             total_search_result_set = total_search_result_set + self.parseRedditSearchResults(reddit_search_results)
-
-        # parsed_search_results_for_serializer = self.parseRedditSearchResults(reddit_search_results)
 
         results = RedditSearchQuerySerializer(total_search_result_set, many=True).data
 
