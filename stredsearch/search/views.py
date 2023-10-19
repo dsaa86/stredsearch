@@ -1,12 +1,15 @@
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from search.models import *
 from search.serializers import *
+from rest_framework import mixins
+from rest_framework import generics
 
-@api_view(['GET'])
-def questionList(request, format=None):
-    if request.method == 'GET':
-        questions = StackQuestion.objects.all()
-        serializer = StackQuestionSerializer(questions, many=True)
-        return Response(serializer.data)
+
+class QuestionList(mixins.ListModelMixin, generics.GenericAPIView):
+    queryset = StackQuestion.objects.all()
+    serializer_class = StackQuestionSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+    
+
+class 
