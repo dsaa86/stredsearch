@@ -5,7 +5,7 @@ from search.models import *
 from search.serializers import *
 
 @api_view(['GET'])
-def questionList(request):
+def questionList(request, format=None):
     if request.method == 'GET':
         questions = StackQuestion.objects.all()
         serializer = StackQuestionSerializer(questions, many=True)
