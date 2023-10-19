@@ -66,10 +66,10 @@ terms = {
     'limit' : '100'
 }
 
-subred = '/r/python'
+# subred = '/r/python'
 
-returned_terms = searchRedditAndReturnResponse(terms, subred)
+# returned_terms = searchRedditAndReturnResponse(terms, subred)
 
-for term in returned_terms:
-    print(f"""{term}
-""")
+# for term in returned_terms:
+#     print(f"""{term}
+# """)
