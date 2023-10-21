@@ -1,4 +1,5 @@
 import requests, json
+from datetime import datetime
 
 # params = {
 #     "client_id" : "27411",
@@ -57,6 +58,7 @@ ACCESS_ROUTES = {
             "route": "/2.3/questions/{ids}/linked",
             "params": {
                 "ids": "the id(s) of questions for which to find other, related questions",
+                "test": "",
             },
         },
     },
@@ -86,21 +88,56 @@ QUESTION_FIELDS = [
 ]
 
 
-def getQueryCategories() -> list:
-    category_list = list(ACCESS_ROUTES.keys())
-    category_list.pop(0)
+def transposeKeyListForSerializer(category_list, key):
+    for index, elem in enumerate(category_list):
+        category_list[index] = {f"{key}": f"{elem}"}
 
     return category_list
 
 
+def getQueryCategories() -> list:
+    category_list = list(ACCESS_ROUTES.keys())
+    category_list.pop(0)
+
+    formatted_category_list = transposeKeyListForSerializer(category_list, "category")
+
+    return formatted_category_list
+
+
 def getQueryCategoryRoutes(category) -> list:
     route_list = list(ACCESS_ROUTES[category].keys())
-    return route_list
+
+    formatted_route_list = transposeKeyListForSerializer(route_list, "route")
+
+    return formatted_route_list
+
+
+def processURLAndParamsToList(url, params):
+    data_list = {}
+
+    data_list["url"] = url["url"]
+
+    params_string_for_return = ""
+
+    print(len(params.keys()))
+
+    for key in params.keys():
+        print(key)
+        params_string_for_return += key
+
+    data_list["params"] = params_string_for_return
+
+    processed_data = []
+    processed_data.append(data_list)
+
+    return processed_data
 
 
 def getAPIRoute(category, query) -> str:
     api_route = ACCESS_ROUTES[category][query]["route"]
-    return api_route
+
+    formatted_api_route = {"url": f"{api_route}"}
+    return formatted_api_route
 
 
 def getAPIParams(category, query) -> dict:
@@ -134,6 +171,11 @@ def convertListToString(list_to_convert: list, delimiter: str = None) -> str:
     return return_string
 
 
+def convertMSToDateTime(ms_value: int) -> object:
+    converted_value = datetime.fromtimestamp(ms_value)
+    return converted_value
+
+
 def sanitiseStackOverflowResponse(json_response):
     # full data set contains additional meta data that is unnecessary. This call strips away that meta data.
     complete_question_set = getQuestionsOnlyFromStackOverflowResponse(json_response)
@@ -156,9 +198,16 @@ def sanitiseStackOverflowResponse(json_response):
         # this logic prevents fields that aren't present in a question from
         # being appended as empty or raising an exception during runtime
         for key, data_field in question.items():
-            print(f"{key} : {data_field}")
             if key in QUESTION_FIELDS:
                 question_data[key] = question[key]
+
+            # Serializer expects datetime, not timestamp as returned by SO
+            if (
+                key == "last_activity_date"
+                or key == "creation_date"
+                or key == "last_edit_date"
+            ):
+                question_data[key] = convertMSToDateTime(question_data[key])
 
         sanitised_data.append(question_data)
 
@@ -171,10 +220,19 @@ def queryStackOverflow(category, query, filters) -> dict:
 
     params["site"] = getRouteAppend()["site"]
 
-    query_response = requests.get(url, params)
+    try:
+        query_response = requests.get(url, params)
+    # Error raised typically when there is no internet connection on the client device
+    except requests.exceptions.SSLError as e:
+        return {"error": f"Error: Requests SSLError, {e.strerror}"}
 
     json_response = json.loads(query_response.content)
 
-    sanitised_data_for_commit = sanitiseStackOverflowResponse(json_response)
+    sanitised_data_for_return = sanitiseStackOverflowResponse(json_response)
 
-    return sanitised_data_for_commit
+    for data in sanitised_data_for_return:
+        print(data)
+        print()
+        print()
+
+    return sanitised_data_for_return
