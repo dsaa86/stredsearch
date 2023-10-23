@@ -1,5 +1,7 @@
 import requests, json
 from datetime import datetime
+import zoneinfo
+from django.utils.dateparse import parse_datetime
 
 # params = {
 #     "client_id" : "27411",
@@ -192,6 +194,9 @@ def convertListToString(list_to_convert: list, delimiter: str = None) -> str:
 
 def convertMSToDateTime(ms_value: int) -> object:
     converted_value = datetime.fromtimestamp(ms_value)
+    converted_value = converted_value.strftime("%Y-%m-%d %H:%M:%S")
+    converted_value = parse_datetime(converted_value)
+    converted_value.replace(tzinfo=zoneinfo.ZoneInfo("Asia/Dubai"))
     return converted_value
 
 
@@ -234,7 +239,9 @@ def sanitiseStackOverflowResponse(json_response):
 
 
 def queryStackOverflow(category, query, filters) -> dict:
-    url = getRoutePrepend() + getAPIRoute(category, query)
+    route_prepend = getRoutePrepend()
+    query_route = getAPIRoute(category, query)
+    url = route_prepend + query_route["url"]
     params = filters
 
     params["site"] = getRouteAppend()["site"]
@@ -248,10 +255,5 @@ def queryStackOverflow(category, query, filters) -> dict:
     json_response = json.loads(query_response.content)
 
     sanitised_data_for_return = sanitiseStackOverflowResponse(json_response)
-
-    for data in sanitised_data_for_return:
-        print(data)
-        print()
-        print()
 
     return sanitised_data_for_return

@@ -9,6 +9,7 @@ from rest_framework import status
 from .stackquery import *
 from .redditquery import *
 import html5lib
+from search.signals import commit_questions_to_local_db_signal
 
 
 class GetAllStackOverFlowCategories(APIView):
@@ -117,6 +118,11 @@ class GetStackoverflowData(APIView):
         total_search_result_set = queryStackOverflow(category, query, processed_filters)
 
         results = StackSearchQuerySerializer(total_search_result_set, many=True).data
+
+        print(datetime.now())
+        commit_questions_to_local_db_signal.send(
+            sender=None, questions=total_search_result_set, search_term=None
+        )
 
         return Response(results)
 
