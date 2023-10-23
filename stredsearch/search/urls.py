@@ -3,7 +3,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from search import views
 
 urlpatterns = [
-    path("search/", views.QuestionList.as_view()),
+    # path("search/", views.QuestionList.as_view()),
     path(
         "reddit/<str:subred>/<str:q>/<str:type>/<str:limit>/",
         views.GetRedditData.as_view(),

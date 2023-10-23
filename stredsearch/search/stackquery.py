@@ -71,6 +71,25 @@ ACCESS_ROUTES = {
                 "intitle": "text that should be present in the title of the question",
             },
         },
+        "advanced-search": {
+            "route": "/2.3/search/advanced",
+            "params": {
+                "q": "free form text",
+                "accepted": "boolean - True returns only qs with accepted answers",
+                "answers": "minimum number of answers a q must have received",
+                "body": "text which must appear in question bodies",
+                "closed": "True returns only closed questions, False returns only open qs, omitted returns any",
+                "migrated": "True returns only qs migrated to another site, False returns only qs not migrated, omitted returns any",
+                "notice": "True returns only qs with post notices, false returns only those without, omit returns any",
+                "nottagged": "semicolon delimted list of tags, none will be present in q - must have at least one other parameter completed in order to be valid",
+                "tagged": "semicolon delimted list of tags, at least one will be present in a w",
+                "title": "text which must appear in q titles",
+                "user": "the id of the user who must own the q",
+                "url": "a url which must be returned in a post, may include wildcards",
+                "views": "the minimum number of views returned qs must have",
+                "wiki": "true returns only communited wiki qs, false returns only non-communited wiki qs, omit returns any",
+            },
+        },
     },
 }
 

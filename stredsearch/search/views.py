@@ -81,6 +81,23 @@ class GetStackoverflowData(APIView):
         tagged,
         format=None,
     ):
+        
+    #
+    # LOGIC FOR RETRIEVING STACKOVERFLOW QUESTIONS
+    #
+    # 1.    .processFilters -> Not all filters are required by a 
+    #       user. This function breaks apart user-specified     
+    #       filters from those that are not specified for this 
+    #       particular query. 
+    # 
+    # 2.    .queryStackOverflow -> Most of the sanitisation for 
+    #       the query is performed within the SO search library. 
+    #       The necessary data is passed to the library and a 
+    #       data set is returned. 
+    # 
+    # 3.    The results are serialized and passed to the response
+    #
+
         params_dict = {
             "page": page,
             "pagesize": pagesize,
@@ -97,20 +114,55 @@ class GetStackoverflowData(APIView):
 
         total_search_result_set = queryStackOverflow(category, query, processed_filters)
 
-        # print(total_search_result_set)
-
-        # processed_results = self.processResultsForSerialization(results)
-
-        for elem in total_search_result_set:
-            if "user_id" not in elem.keys():
-                print(elem)
-
         results = StackSearchQuerySerializer(total_search_result_set, many=True).data
 
         return Response(results)
 
 
 class GetRedditData(APIView):
+
+    TODO This needs refactoring so that the heavy lifting is done within the library and not here. | CREATED: 12:37 23/10/2023
+    #
+    # LOGIC FLOW FOR RETRIEVING REDDIT QUESTIONS:
+    #
+    # 1.    .get -> master function controlling request to Reddit
+    #       Function receives the subreddites to search, question
+    #       data and the type of search that should be performed
+    #       (questions/subreds/users)
+    #
+    # 2.    .buildTermsFromParams -> builds the required dict of
+    #       terms that Reddit API expects. This is simply a
+    #       formatted version of the provided question and
+    #       params that are received from the UI.
+    #
+    # 3.    .buildSubredFromParams -> Subreds to search are
+    #       provided from the UI as a comma-separated string.
+    #       This function breaks the string in to a list by
+    #       the delimiter.
+    #
+    # 4.    The list of subreds is iterated and a search of
+    #       Reddit is perfomred at each iteration. Reddit API
+    #       requires that each subred is searched individually.
+    #
+    # 5.    .getRedditTerms -> A simple handler function that
+    #       initiates the search to Reddit API, passing this
+    #       to the appropriate search function in the Reddit
+    #       module.
+    #
+    # 6.    .parseRedditSearchResults -> The Reddit module
+    #       returns a dict of tuples. Each tuple contains
+    #       two elements - a question title and the link to that
+    #       question. Each tuple is iterated and turned in to a
+    #       dict, the dict is then appended to a list. The list
+    #       of dicts is then returned.
+    #
+    # 7.    Every set of responses from the individual searches
+    #       on the Reddit API is appended to a master list after
+    #       being parsed in the last step. This master list is
+    #       passed to the serializer and the data response from
+    #       this returned as a part of the response.
+    #
+
     def getRedditTerms(self, terms: dict, subred) -> list:
         return searchRedditAndReturnResponse(terms, subred)
 
@@ -138,7 +190,6 @@ class GetRedditData(APIView):
 
     def get(self, request, subred, q, type, limit, format=None):
         # PARAMS STRUCTURE
-
         # terms = {
         #     'q' : 'exception raised during for loop python',
         #     'type' : '{ sr | link | user } --> AND = comma delimited',
@@ -165,22 +216,22 @@ class GetRedditData(APIView):
         return Response(results)
 
 
-class QuestionList(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = StackQuestion.objects.all()
-    serializer_class = StackQuestionSerializer
+# class QuestionList(mixins.ListModelMixin, generics.GenericAPIView):
+#     queryset = StackQuestion.objects.all()
+#     serializer_class = StackQuestionSerializer
 
-    def get(self, request, *args, **kwargs):
-        terms = {
-            "q": "exception raised during for loop python",
-            "type": "link",
-            "limit": "100",
-        }
+#     def get(self, request, *args, **kwargs):
+#         terms = {
+#             "q": "exception raised during for loop python",
+#             "type": "link",
+#             "limit": "100",
+#         }
 
-        subred = "/r/python"
-        returned_terms = searchRedditAndReturnResponse(terms, subred)
-        print(returned_terms)
+#         subred = "/r/python"
+#         returned_terms = searchRedditAndReturnResponse(terms, subred)
+#         print(returned_terms)
 
-        response = queryStackOverflow(
-            "questions", "question_by_tag", {"tagged": "python;java"}
-        )
-        return self.list(request, *args, **kwargs)
+#         response = queryStackOverflow(
+#             "questions", "question_by_tag", {"tagged": "python;java"}
+#         )
+#         return self.list(request, *args, **kwargs)
