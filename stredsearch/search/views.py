@@ -43,8 +43,6 @@ class GetStackOverflowRouteURLAndParams(APIView):
 
 
 class GetStackoverflowData(APIView):
-    def processResultsForSerialization(results: dict) -> dict:
-        pass
 
     def removeBlankParams(self, keys_to_delete: list, params_dict: dict) -> dict:
         for key in keys_to_delete:
@@ -54,10 +52,14 @@ class GetStackoverflowData(APIView):
 
     def processFilters(self, params_dict: dict) -> dict:
         keys_to_delete = []
+
+        # " " indicates a param not used in this search on the 
+        # part of the user.
         for key, value in params_dict.items():
             if value == " ":
                 keys_to_delete.append(key)
 
+            # Stack Exchange expects semi-colon delimited list
             if key == "tagged":
                 params_dict[key] = value.replace(",", ";")
 
@@ -96,7 +98,9 @@ class GetStackoverflowData(APIView):
     #       data set is returned. 
     # 
     # 3.    The results are serialized and passed to the response
-    #
+    # 
+
+    FIXME Need to account for additional params for the advanced search function. | CREATED: 12:42 23/10/2023
 
         params_dict = {
             "page": page,
