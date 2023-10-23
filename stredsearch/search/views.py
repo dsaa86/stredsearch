@@ -43,7 +43,6 @@ class GetStackOverflowRouteURLAndParams(APIView):
 
 
 class GetStackoverflowData(APIView):
-
     def removeBlankParams(self, keys_to_delete: list, params_dict: dict) -> dict:
         for key in keys_to_delete:
             del params_dict[key]
@@ -53,7 +52,7 @@ class GetStackoverflowData(APIView):
     def processFilters(self, params_dict: dict) -> dict:
         keys_to_delete = []
 
-        # " " indicates a param not used in this search on the 
+        # " " indicates a param not used in this search on the
         # part of the user.
         for key, value in params_dict.items():
             if value == " ":
@@ -83,24 +82,23 @@ class GetStackoverflowData(APIView):
         tagged,
         format=None,
     ):
-        
-    #
-    # LOGIC FOR RETRIEVING STACKOVERFLOW QUESTIONS
-    #
-    # 1.    .processFilters -> Not all filters are required by a 
-    #       user. This function breaks apart user-specified     
-    #       filters from those that are not specified for this 
-    #       particular query. 
-    # 
-    # 2.    .queryStackOverflow -> Most of the sanitisation for 
-    #       the query is performed within the SO search library. 
-    #       The necessary data is passed to the library and a 
-    #       data set is returned. 
-    # 
-    # 3.    The results are serialized and passed to the response
-    # 
+        #
+        # LOGIC FOR RETRIEVING STACKOVERFLOW QUESTIONS
+        #
+        # 1.    .processFilters -> Not all filters are required by a
+        #       user. This function breaks apart user-specified
+        #       filters from those that are not specified for this
+        #       particular query.
+        #
+        # 2.    .queryStackOverflow -> Most of the sanitisation for
+        #       the query is performed within the SO search library.
+        #       The necessary data is passed to the library and a
+        #       data set is returned.
+        #
+        # 3.    The results are serialized and passed to the response
+        #
 
-    FIXME Need to account for additional params for the advanced search function. | CREATED: 12:42 23/10/2023
+        # FIXME Need to account for additional params for the advanced search function. | CREATED: 12:42 23/10/2023
 
         params_dict = {
             "page": page,
@@ -124,8 +122,7 @@ class GetStackoverflowData(APIView):
 
 
 class GetRedditData(APIView):
-
-    TODO This needs refactoring so that the heavy lifting is done within the library and not here. | CREATED: 12:37 23/10/2023
+    # TODO This needs refactoring so that the heavy lifting is done within the library and not here. | CREATED: 12:37 23/10/2023
     #
     # LOGIC FLOW FOR RETRIEVING REDDIT QUESTIONS:
     #

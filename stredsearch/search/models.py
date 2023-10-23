@@ -2,10 +2,12 @@ from django.db import models
 
 # Create your models here.
 
+
 class StackRoute(models.Model):
-    route_root = models.CharField(blank=False, default='', max_length=200)
-    route = models.CharField(blank=False, default='', max_length=200)
+    route_root = models.CharField(blank=False, default="", max_length=200)
+    route = models.CharField(blank=False, default="", max_length=200)
     params = models.JSONField()
+
 
 class StackMeta(models.Model):
     route_prepend = models.CharField(max_length=200)
@@ -13,13 +15,30 @@ class StackMeta(models.Model):
     filters = models.JSONField()
     sort = models.JSONField()
 
+
 class StackUser(models.Model):
     user_id = models.IntegerField()
     display_name = models.CharField(max_length=200)
 
-class StackQuestion(models.Model):
+
+class StackTags(models.Model):
+    tag_name = models.CharField(max_length=100, blank=False)
+
+
+class StackSearchTerms(models.Model):
+    search_term = models.CharField(max_length=500)
+
+
+class StredSearchQuestion(models.Model):
     created_on_stredsearch = models.DateTimeField(auto_now_add=True)
     updated_on_stredsearch = models.DateTimeField(auto_now=True)
+    search_term = models.ManyToManyField(StackSearchTerms, blank=True)
+    link = models.CharField(max_length=200)
+    title = models.CharField(max_length=200)
+    times_returned_as_search_result = models.IntegerField(default=0)
+
+
+class StackQuestion(StredSearchQuestion):
     owner = models.ForeignKey(StackUser, on_delete=models.PROTECT)
     is_answered = models.BooleanField()
     view_count = models.IntegerField()
@@ -29,5 +48,8 @@ class StackQuestion(models.Model):
     creation_date = models.DateTimeField()
     last_edit_date = models.DateTimeField(blank=True)
     question_id = models.IntegerField()
-    link = models.CharField(max_length=200)
-    title = models.CharField(max_length=200)
+    tags = models.ManyToManyField(StackTags)
+
+
+class RedditQuestion(StredSearchQuestion):
+    type = models.CharField(max_length=10)
