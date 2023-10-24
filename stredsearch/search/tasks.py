@@ -7,14 +7,55 @@ from django.db.models import F
 from django.db.models.query import QuerySet
 
 
-# FIXME Needs refactoring in to segregated functions | CREATED: 18:49 23/10/2023
+def getStackUserFromDBOrCreate(question):
+    user = None
+
+    if question["user_id"] in StackUser.objects.values_list("user_id", flat=True):
+        user = StackUser.objects.all().filter(user_id=question["user_id"]).first()
+    else:
+        user = StackUser.objects.create(
+            user_id=question["user_id"], display_name=question["display_name"]
+        )
+
+    return user
+
+
+def getStackSearchTermFromDBOrCreate(search_term):
+    search_term_db_obj = None
+
+    if search_term in StackSearchTerms.objects.values_list("search_term", flat=True):
+        search_term_db_obj = StackSearchTerms.objects.all().filter(
+            search_term=search_term
+        )
+    elif search_term != None:
+        search_term_db_obj = StackSearchTerms.objects.create(search_term=search_term)
+
+    return search_term_db_obj
+
+
+def getStackTagsFromDBOrCreate(question):
+    tags_list = question["tags"].split(",")
+
+    all_tags_in_db = StackTags.objects.values_list("tag_name", flat=True)
+
+    tags_objs = []
+
+    for tag in tags_list:
+        if tag in all_tags_in_db:
+            tags_objs.append(StackTags.objects.all().filter(tag_name=tag))
+        else:
+            tags_objs.append(StackTags.objects.create(tag_name=tag))
+
+    return tags_objs
 
 
 @shared_task
-def tasksReceiver(questions_passed, search_term):
+def asyncStackQuestionDBProcessor(questions_passed, search_term):
     questions = questions_passed
 
     for question in questions:
+        # Is the question already in the DB? If so, increment the
+        # 'times_viewed' counter by 1.
         if question["question_id"] in StackQuestion.objects.values_list(
             "question_id", flat=True
         ):
@@ -25,39 +66,45 @@ def tasksReceiver(questions_passed, search_term):
             )
             continue
 
-        user = None
+        user = getStackUserFromDBOrCreate(question)
 
-        if question["user_id"] in StackUser.objects.values_list("user_id", flat=True):
-            user = StackUser.objects.all().filter(user_id=question["user_id"]).first()
-        else:
-            user = StackUser.objects.create(
-                user_id=question["user_id"], display_name=question["display_name"]
-            )
+        # user = None
 
-        search_term_db_obj = None
+        # if question["user_id"] in StackUser.objects.values_list("user_id", flat=True):
+        #     user = StackUser.objects.all().filter(user_id=question["user_id"]).first()
+        # else:
+        #     user = StackUser.objects.create(
+        #         user_id=question["user_id"], display_name=question["display_name"]
+        #     )
 
-        if search_term in StackSearchTerms.objects.values_list(
-            "search_term", flat=True
-        ):
-            search_term_db_obj = StackSearchTerms.objects.all().filter(
-                search_term=search_term
-            )
-        elif search_term != None:
-            search_term_db_obj = StackSearchTerms.objects.create(
-                search_term=search_term
-            )
+        search_term_db_obj = getStackSearchTermFromDBOrCreate(search_term)
 
-        tags_list = question["tags"].split(",")
+        # search_term_db_obj = None
 
-        all_tags_in_db = StackTags.objects.values_list("tag_name", flat=True)
+        # if search_term in StackSearchTerms.objects.values_list(
+        #     "search_term", flat=True
+        # ):
+        #     search_term_db_obj = StackSearchTerms.objects.all().filter(
+        #         search_term=search_term
+        #     )
+        # elif search_term != None:
+        #     search_term_db_obj = StackSearchTerms.objects.create(
+        #         search_term=search_term
+        #     )
 
-        tags_objs = []
+        tags_objs = getStackTagsFromDBOrCreate(question)
 
-        for tag in tags_list:
-            if tag in all_tags_in_db:
-                tags_objs.append(StackTags.objects.all().filter(tag_name=tag))
-            else:
-                tags_objs.append(StackTags.objects.create(tag_name=tag))
+        # tags_list = question["tags"].split(",")
+
+        # all_tags_in_db = StackTags.objects.values_list("tag_name", flat=True)
+
+        # tags_objs = []
+
+        # for tag in tags_list:
+        #     if tag in all_tags_in_db:
+        #         tags_objs.append(StackTags.objects.all().filter(tag_name=tag))
+        #     else:
+        #         tags_objs.append(StackTags.objects.create(tag_name=tag))
 
         question_to_add_to_db = StackQuestion.objects.create(
             is_answered=question["is_answered"],
@@ -72,33 +119,21 @@ def tasksReceiver(questions_passed, search_term):
             times_returned_as_search_result=1,
         )
 
+        # Existing tags returned as type QuerySet, new tags returned as part
+        # of the question (ultimately this is from the HTTP response from SO)
         for tag_obj in tags_objs:
             if type(tag_obj) is QuerySet:
                 question_to_add_to_db.tags.add(tag_obj.values()[0]["id"])
             else:
                 question_to_add_to_db.tags.add(tag_obj.id)
 
+        # Not all questions have a last edit date
         if "last_edit_date" in question.keys():
             question_to_add_to_db.last_edit_date = question["last_edit_date"]
 
+        # Search terms only exist in advanced searches, all other SO searches
+        # are based on tags alone.
         if search_term_db_obj != None:
             question_to_add_to_db.search_term = search_term_db_obj
 
         question_to_add_to_db.save()
-
-        print("Success")
-
-    all_users = StackUser.objects.all()
-
-    for user in all_users:
-        print(user)
-
-    all_questions = StackQuestion.objects.all()
-
-    for question in all_questions:
-        print(question)
-
-    all_tags = StackTags.objects.all()
-
-    for tag in all_tags:
-        print(tag)
