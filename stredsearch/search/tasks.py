@@ -10,12 +10,28 @@ from django.db.models.query import QuerySet
 def getStackUserFromDBOrCreate(question):
     user = None
 
-    if question["user_id"] in StackUser.objects.values_list("user_id", flat=True):
-        user = StackUser.objects.all().filter(user_id=question["user_id"]).first()
-    else:
-        user = StackUser.objects.create(
-            user_id=question["user_id"], display_name=question["display_name"]
-        )
+    try:
+        if question["user_id"] in StackUser.objects.values_list("user_id", flat=True):
+            user = StackUser.objects.all().filter(user_id=question["user_id"]).first()
+        else:
+            user = StackUser.objects.create(
+                user_id=question["user_id"], display_name=question["display_name"]
+            )
+    except KeyError as e:
+        # User has been deleted from the SO database
+        # The search result from the API does not contain user data
+        if "StredSearch: StackOverflow User Deleted" in StackUser.objects.values_list(
+            "display_name", flat=True
+        ):
+            user = (
+                StackUser.objects.all()
+                .filter(display_name="StredSearch: StackOverflow User Deleted")
+                .first()
+            )
+        else:
+            user = StackUser.objects.create(
+                user_id=00000000, display_name="StredSearch: StackOverflow User Deleted"
+            )
 
     return user
 
@@ -49,7 +65,7 @@ def getStackTagsFromDBOrCreate(question):
     return tags_objs
 
 
-@shared_task
+@shared_task(name="asyncStackQuestionDBProcessor")
 def asyncStackQuestionDBProcessor(questions_passed, search_term):
     questions = questions_passed
 
@@ -68,43 +84,9 @@ def asyncStackQuestionDBProcessor(questions_passed, search_term):
 
         user = getStackUserFromDBOrCreate(question)
 
-        # user = None
-
-        # if question["user_id"] in StackUser.objects.values_list("user_id", flat=True):
-        #     user = StackUser.objects.all().filter(user_id=question["user_id"]).first()
-        # else:
-        #     user = StackUser.objects.create(
-        #         user_id=question["user_id"], display_name=question["display_name"]
-        #     )
-
         search_term_db_obj = getStackSearchTermFromDBOrCreate(search_term)
 
-        # search_term_db_obj = None
-
-        # if search_term in StackSearchTerms.objects.values_list(
-        #     "search_term", flat=True
-        # ):
-        #     search_term_db_obj = StackSearchTerms.objects.all().filter(
-        #         search_term=search_term
-        #     )
-        # elif search_term != None:
-        #     search_term_db_obj = StackSearchTerms.objects.create(
-        #         search_term=search_term
-        #     )
-
         tags_objs = getStackTagsFromDBOrCreate(question)
-
-        # tags_list = question["tags"].split(",")
-
-        # all_tags_in_db = StackTags.objects.values_list("tag_name", flat=True)
-
-        # tags_objs = []
-
-        # for tag in tags_list:
-        #     if tag in all_tags_in_db:
-        #         tags_objs.append(StackTags.objects.all().filter(tag_name=tag))
-        #     else:
-        #         tags_objs.append(StackTags.objects.create(tag_name=tag))
 
         question_to_add_to_db = StackQuestion.objects.create(
             is_answered=question["is_answered"],

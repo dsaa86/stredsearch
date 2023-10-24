@@ -119,7 +119,6 @@ class GetStackoverflowData(APIView):
 
         results = StackSearchQuerySerializer(total_search_result_set, many=True).data
 
-        print(datetime.now())
         commit_questions_to_local_db_signal.send(
             sender=None, questions=total_search_result_set, search_term=None
         )

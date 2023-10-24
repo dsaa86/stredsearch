@@ -8,4 +8,4 @@ from search.signals import commit_questions_to_local_db_signal
 
 
 def commitNewQuestion(sender, questions, search_term, **kwargs):
-    asyncStackQuestionDBProcessor(questions, search_term)
+    asyncStackQuestionDBProcessor.apply_async(args=[questions, search_term])
