@@ -1,0 +1,61 @@
+from rest_framework import serializers
+from search.models import *
+
+
+class StackQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackQuestion
+        fields = "__all__"
+
+
+class StackUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackUser
+        fields = "__all__"
+
+
+class StackRouteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackRoute
+        fields = "__all__"
+
+
+class StackMetaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackMeta
+        fields = "__all__"
+
+
+class RedditSearchQuerySerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=500)
+    link = serializers.CharField(max_length=500)
+
+
+class StackSearchQuerySerializer(serializers.Serializer):
+    tags = serializers.CharField()
+    is_answered = serializers.BooleanField()
+    view_count = serializers.IntegerField()
+    answer_count = serializers.IntegerField()
+    score = serializers.IntegerField()
+    last_activity_date = serializers.DateTimeField()
+    creation_date = serializers.DateTimeField()
+    last_edit_date = serializers.DateTimeField(required=False)
+    question_id = serializers.IntegerField()
+    link = serializers.CharField(max_length=500)
+    title = serializers.CharField(max_length=500)
+    # user may have deleted account, questions with this occurence do not return a user_id and will throw an error if the field presence is enforeced
+    user_id = serializers.IntegerField(required=False)
+    display_name = serializers.CharField(max_length=500)
+
+
+class StackCategoriesSerializer(serializers.Serializer):
+    category = serializers.CharField(max_length=50)
+
+
+class StackRoutesSerializer(serializers.Serializer):
+    route = serializers.CharField(max_length=50)
+
+
+class StackRoutesURLAndParamsSerializer(serializers.Serializer):
+    url = serializers.CharField(max_length=100)
+    params = serializers.CharField(max_length=250)
