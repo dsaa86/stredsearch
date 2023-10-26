@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+    db:
+        image: postgres:16.0-alpine
+        restart: unless-stopped
+        volumes:
+            - ./postgres_data:/var/lib/postgresql/data/
+        environment:
+            - POSTGRES_DB=compton-db
+            - POSTGRES_USER=compton
+            - POSTGRES_PASSWORD=L411fm115rl148c!
+        expose:
+            - 5432
+        ports:
+            - 5432:5432
+    # nginx:
+    #     restart: always
+    #     image: nginx:1.25-alpine
+    #     ports:
+    #         - 80:80
+    #     volumes:
+    #         - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    #         - static_volume:/app/stredsearch/django_static
+    server:
+        restart: unless-stopped
+        build:
+            context: .
+            dockerfile: ./dockerfile
+        volumes:
+            - static_volume:/app/stredsearch/django_static
+        entrypoint: /usr/src/server-entrypoint.sh
+        ports: 
+            - 8000:8000
+        expose:
+            - 8000     
+        environment:
+            - DEBUG="True"
+            - DJANGO_DB=postgresql
+            - POSTGRES_HOST=db
+            - POSTGRES_DB=compton-db
+            - POSTGRES_USER=compton
+            - POSTGRES_PASSWORD=L411fm115rl148c!
+            - POSTGRES_PORT=5432
+        depends_on:
+            - db
+            - redis
+        links:
+            - db
+            - redis
+    worker:
+        restart: unless-stopped
+        build:
+            context: .
+            dockerfile: dockerfile
+        volumes:
+            - static_volume:/app/stredsearch/django_static
+        entrypoint: /usr/src/worker-entrypoint.sh
+        environment:
+            - DEBUG="True"
+            - DJANGO_DB=postgresql
+            - POSTGRES_HOST=db
+            - POSTGRES_DB=compton-db
+            - POSTGRES_USER=compton
+            - POSTGRES_PASSWORD=L411fm115rl148c!
+            - POSTGRES_PORT=5432
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+        depends_on:
+            - server
+            - redis
+            - db
+        links:
+            - db
+            - redis
+    redis:
+        restart: unless-stopped
+        image: redis:7.0.5-alpine
+        ports:
+            - 6379:6379
+        expose:
+            - 6379
+        depends_on:
+            - db
+        links:
+            - db
+
+    
+volumes:
+    static_volume: {}
+    postgres_data: {}

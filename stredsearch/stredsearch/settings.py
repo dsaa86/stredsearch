@@ -12,19 +12,33 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = "django-insecure-=eaoq9i4bfi_k-^9xx2!a80%!8@2^mlx4g=za-7nm5_(0ixs84"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-=eaoq9i4bfi_k-^9xx2!a80%!8@2^mlx4g=za-7nm5_(0ixs84"
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", True)
+
+
+# ALLOWED_HOSTS = ["127.0.0.1", "0.0.0.0", "localhost"]
+
+# if os.environ.get("ALLOWED_HOSTS") is not None:
+#     try:
+#         ALLOWED_HOSTS += os.environ.get("ALLOWED_HOSTS").split(",")
+#     except Exception as e:
+#         print("Cant set ALLOWED_HOSTS, using default instead")
 
 
 ALLOWED_HOSTS = []
@@ -40,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "search",
+    "django_rq",
 ]
 
 MIDDLEWARE = [
@@ -73,15 +88,66 @@ TEMPLATES = [
 WSGI_APPLICATION = "stredsearch.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+# DB_SQLITE = "sqlite"
+# DB_POSTGRESQL = "postgresql"
+
+# DATABASES_ALL = {
+#     DB_SQLITE: {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     },
+#     DB_POSTGRESQL: {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+#         "NAME": os.environ.get("POSTGRES_NAME", "compton-db"),
+#         "USER": os.environ.get("POSTGRES_USER", "compton"),
+#         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "Delta323!"),
+#         "PORT": int(os.environ.get("POSTGRES_PORT", "5432")),
+#     },
+# }
+
+# DATABASES_ALL = {
+#     DB_SQLITE: {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     },
+#     DB_POSTGRESQL: {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "HOST": os.environ.get("POSTGRES_HOST"),
+#         # "NAME": "compton-db",
+#         # "USER": "compton",
+#         # "PASSWORD": "Delta323!",
+#         "NAME": os.environ.get("POSTGRES_NAME"),
+#         "USER": os.environ.get("POSTGRES_USER"),
+#         "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+#         "PORT": "5432",
+#     },
+# }
+
+# DATABASES = {"default": DATABASES_ALL[os.environ.get("DJANGO_DB", DB_POSTGRESQL)]}
+
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "compton-db",
+        "USER": "compton",
+        "PASSWORD": "L411fm115rl148c!",
+        "HOST": "localhost",
+        "PORT": 5432,
     }
 }
+
+
+# Database
+# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
 
 # Password validation
@@ -118,10 +184,27 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-
-STATIC_URL = "static/"
+STATIC_URL = "/django_static/"
+STATIC_ROOT = BASE_DIR / "django_static"
+# STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# REDIS_HOST = os.environ.get("REDIS_HOST")
+# REDIS_PORT = os.environ.get("REDIS_PORT")
+
+# RQ_QUEUES = {
+#     "default": {"HOST": REDIS_HOST, "PORT": REDIS_PORT, "DB": 0, "DEFAULT_TIMEOUT": 360}
+# }
+
+RQ_QUEUES = {
+    "default": {
+        "HOST": "localhost",
+        "PORT": 6379,
+        "DB": 0,
+    }
+}
