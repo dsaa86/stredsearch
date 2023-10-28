@@ -28,3 +28,27 @@ def task_execute(data:dict):
     #     print(e)
     #     # logger.info("ERROR")
     #     # logger.error(e)
+
+@job
+def commitStackQuestionsToDB(data:dict):
+    pass
+
+@job
+def commitRedditQuestionsToDB(data:dict):
+    pass
+
+@job
+def updateStackQuestionInDB(data:dict):
+    pass
+
+@job
+def updateStackTagListInDB(data:dict):
+    pass
+
+@job
+def updateRedditQuestionInDB(data:dict):
+    pass
+
+@job
+def updateRedditSubRedditsInDb(data:dict):
+    pass
