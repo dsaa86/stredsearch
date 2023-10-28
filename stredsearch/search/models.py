@@ -17,10 +17,6 @@ class StackMeta(models.Model):
 class StackUser(models.Model):
     user_id = models.IntegerField()
     display_name = models.CharField(max_length=200)
-    gibberish = models.CharField(
-        max_length=500,
-        blank=True,
-    )
 
     def __str__(self) -> str:
         return self.display_name
