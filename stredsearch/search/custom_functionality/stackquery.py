@@ -91,7 +91,7 @@ QUESTION_FIELDS = [
 ]
 
 
-def transposeKeyListForSerializer(category_list: list, key: str):
+def transposeKeyListForSerializer(category_list: list, key: str) -> list:
 
     if not isinstance(category_list, list):
         raise TypeError("category_list must be of type list")
@@ -144,7 +144,7 @@ def processURLAndParamsToList(url, params: dict) -> list:
 
 def getAPIRoute(category, query) -> str:
     api_route = ACCESS_ROUTES[category][query]["route"]
-    return {"url": f"{api_route}"}
+    return api_route
 
 
 def getAPIParams(category, query) -> dict:
@@ -160,6 +160,9 @@ def getRouteAppend() -> dict:
 
 
 def getDictOfPossibleFilters() -> dict:
+    return ACCESS_ROUTES["meta"]["filters"]
+
+def getFilters() -> dict:
     return ACCESS_ROUTES["meta"]["filters"]
 
 
