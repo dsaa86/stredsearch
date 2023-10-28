@@ -5,7 +5,6 @@ sortedcontainers
 cryptography
 psycopg
 psycopg2
-psycopg2-binary
 django
 djangorestframework
 markdown

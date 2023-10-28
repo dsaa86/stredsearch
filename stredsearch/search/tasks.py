@@ -1,4 +1,5 @@
 import random
+import time
 
 from django_rq import job
 import logging
@@ -9,52 +10,58 @@ from .models import *
 
 
 @job
-def task_execute(name):
-    print("Working Nicely")
+def task_execute(data:dict):
 
-    # alphabet = [
-    #     "a",
-    #     "b",
-    #     "c",
-    #     "d",
-    #     "e",
-    #     " f",
-    #     "g",
-    #     "h",
-    #     "i",
-    #     "j",
-    #     "k",
-    #     "l",
-    #     "m",
-    #     "n",
-    #     "o",
-    #     "p",
-    #     "q",
-    #     "r",
-    #     "s",
-    #     "t",
-    #     "u",
-    #     "v",
-    #     "w",
-    #     "x",
-    #     "y",
-    #     "z",
-    # ]
-    # rand_string = ""
+    time.sleep(2)
 
-    # for x in range(0, 500):
-    #     letter = alphabet[random.randint(0, 25)]
-    #     rand_string += letter
+    display_name = data["display_name"]
+    user_id = data["user_id"]
 
-    # # logger.info(f"{name} start log...")
+    alphabet = [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        " f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u",
+        "v",
+        "w",
+        "x",
+        "y",
+        "z",
+    ]
+    rand_string = ""
 
-    # try:
-    #     user = StackUser.objects.get(name=name)
-    #     user.gibberish = rand_string
-    #     user.save()
-    #     print("SUCCESS")
-    #     # logger.info("SUCCESS")
-    # except Exception as e:
-    #     print(e)
-    #     # logger.info("ERROR")
-    #     # logger.error(e)
+    for x in range(0, 400):
+        letter = alphabet[random.randint(0, 25)]
+        rand_string += letter
+
+    print(rand_string)
+
+    # logger.info(f"{name} start log...")
+
+    try:
+        user = StackUser.objects.get(user_id=user_id)
+        user.gibberish = rand_string
+        user.save()
+        print("SUCCESS")
+        # logger.info("SUCCESS")
+    except Exception as e:
+        print(e)
+        # logger.info("ERROR")
+        # logger.error(e)

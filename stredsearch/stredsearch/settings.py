@@ -130,9 +130,9 @@ WSGI_APPLICATION = "stredsearch.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "compton-db",
-        "USER": "compton",
-        "PASSWORD": "L411fm115rl148c!",
+        "NAME": "comptondb",
+        "USER": "postgres",
+        "PASSWORD": "uM9!7z=GGG4=M+c`{Uxp",
         "HOST": "localhost",
         "PORT": 5432,
     }

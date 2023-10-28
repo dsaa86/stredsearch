@@ -7,9 +7,9 @@ services:
         volumes:
             - ./postgres_data:/var/lib/postgresql/data/
         environment:
-            - POSTGRES_DB=compton-db
+            - POSTGRES_DB=comptondb
             - POSTGRES_USER=compton
-            - POSTGRES_PASSWORD=L411fm115rl148c!
+            - POSTGRES_PASSWORD=1Dn|/P6g2C^+v0;SIrXA
         expose:
             - 5432
         ports:
@@ -38,9 +38,9 @@ services:
             - DEBUG="True"
             - DJANGO_DB=postgresql
             - POSTGRES_HOST=db
-            - POSTGRES_DB=compton-db
+            - POSTGRES_DB=comptondb
             - POSTGRES_USER=compton
-            - POSTGRES_PASSWORD=L411fm115rl148c!
+            - POSTGRES_PASSWORD=1Dn|/P6g2C^+v0;SIrXA
             - POSTGRES_PORT=5432
         depends_on:
             - db
@@ -60,9 +60,9 @@ services:
             - DEBUG="True"
             - DJANGO_DB=postgresql
             - POSTGRES_HOST=db
-            - POSTGRES_DB=compton-db
+            - POSTGRES_DB=comptondb
             - POSTGRES_USER=compton
-            - POSTGRES_PASSWORD=L411fm115rl148c!
+            - POSTGRES_PASSWORD=1Dn|/P6g2C^+v0;SIrXA
             - POSTGRES_PORT=5432
             - REDIS_HOST=redis
             - REDIS_PORT=6379
