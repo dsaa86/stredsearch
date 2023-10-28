@@ -1,3 +1,4 @@
+from typing import Type
 import requests, json
 from datetime import datetime
 import zoneinfo
@@ -109,18 +110,31 @@ QUESTION_FIELDS = [
 ]
 
 
-def transposeKeyListForSerializer(category_list, key):
-    for index, elem in enumerate(category_list):
-        category_list[index] = {f"{key}": f"{elem}"}
+def transposeKeyListForSerializer(category_list: list, key: str):
 
-    return category_list
+    if not isinstance(category_list, list):
+        raise TypeError("category_list must be of type list")
+    if not isinstance(key, str):
+        raise TypeError("Key must be a string")
+    if not all(isinstance(elem, str) for elem in category_list):
+        raise TypeError("All elements in category_list must be of type string")
+
+    transposed_list = []
+
+    for elem in category_list:
+        transposed_list.append({f"{key}": f"{elem}"})
+
+    return transposed_list
 
 
 def getQueryCategories() -> list:
     category_list = list(ACCESS_ROUTES.keys())
     category_list.pop(0)
 
-    formatted_category_list = transposeKeyListForSerializer(category_list, "category")
+    try:
+        formatted_category_list = transposeKeyListForSerializer(category_list, "category")
+    except TypeError as e:
+        return {"error": f"Error: {e}"} 
 
     return formatted_category_list
 
@@ -128,42 +142,32 @@ def getQueryCategories() -> list:
 def getQueryCategoryRoutes(category) -> list:
     route_list = list(ACCESS_ROUTES[category].keys())
 
-    formatted_route_list = transposeKeyListForSerializer(route_list, "route")
-
-    return formatted_route_list
+    return transposeKeyListForSerializer(route_list, "route")
 
 
-def processURLAndParamsToList(url, params):
-    data_list = {}
-
-    data_list["url"] = url["url"]
+def processURLAndParamsToList(url, params: dict) -> list:
 
     params_string_for_return = ""
-
-    print(len(params.keys()))
 
     for key in params.keys():
         print(key)
         params_string_for_return += key
 
-    data_list["params"] = params_string_for_return
+    data_dict = {
+        "url": url["url"],
+        "params": params_string_for_return,
+    }
 
-    processed_data = []
-    processed_data.append(data_list)
-
-    return processed_data
+    return [data_dict]
 
 
 def getAPIRoute(category, query) -> str:
     api_route = ACCESS_ROUTES[category][query]["route"]
-
-    formatted_api_route = {"url": f"{api_route}"}
-    return formatted_api_route
+    return {"url": f"{api_route}"}
 
 
 def getAPIParams(category, query) -> dict:
-    api_params = ACCESS_ROUTES[category][query]["params"]
-    return api_params
+    return ACCESS_ROUTES[category][query]["params"]
 
 
 def getRoutePrepend() -> str:
@@ -178,14 +182,28 @@ def getDictOfPossibleFilters() -> dict:
     return ACCESS_ROUTES["meta"]["filters"]
 
 
-def getQuestionsOnlyFromStackOverflowResponse(json_response: json) -> dict:
+def getOnlyQuestionsFromStackOverflowResponse(json_response: json) -> dict:
+
+    if not isinstance(json_response, json):
+        raise TypeError("json_response must be of type json")
+    if "items" not in json_response.keys():
+        raise KeyError("json_response must contain a key named 'items'")
+    if not json_response["items"]:
+        raise ValueError("json_response must contain a non-empty 'items' key")
+
     return json_response["items"]
 
 
 def convertListToString(list_to_convert: list, delimiter: str = None) -> str:
+
+    if not isinstance(list_to_convert, list):
+        raise TypeError("list_to_convert must be of type list")
+    if delimiter != None and not isinstance(delimiter, str):
+        raise TypeError("delimiter must be of type string")
+
     return_string = ""
     for index, value in enumerate(list_to_convert):
-        return_string += str(value)
+        return_string += value
         if delimiter != None and index + 1 != len(list_to_convert):
             return_string += f"{delimiter} "
 
@@ -193,6 +211,10 @@ def convertListToString(list_to_convert: list, delimiter: str = None) -> str:
 
 
 def convertMSToDateTime(ms_value: int) -> object:
+
+    if not isinstance(ms_value, int):
+        raise TypeError("ms_value must be of type int")
+
     converted_value = datetime.fromtimestamp(ms_value)
     converted_value = converted_value.strftime("%Y-%m-%d %H:%M:%S")
     converted_value = parse_datetime(converted_value)
@@ -200,40 +222,67 @@ def convertMSToDateTime(ms_value: int) -> object:
     return converted_value
 
 
+def getQuestionData(question:dict) -> dict:
+
+    if not isinstance(question, dict):
+        raise TypeError("question must be of type dict")
+    if "tags" not in question.keys():
+        raise KeyError("question must contain a key named 'tags'")
+    if "owner" not in question.keys():
+        raise KeyError("question must contain a key named 'owner'")
+    if not isinstance(question["tags"], list):
+        raise TypeError("question['tags'] must be of type list")
+    if not isinstance(question["owner"], dict):
+        raise TypeError("question['owner'] must be of type dict")
+
+
+    question_data = {}
+    try:
+        question_data['tags'] = convertListToString(question["tags"], ",")
+    except TypeError as e:
+        return {"error": f"Error: {e}"}
+
+
+    # The owner data is stored as a nested dict within the parent question data
+    for owner_data_key, owner_data_value in question["owner"].items():
+        if owner_data_key == "user_id":
+            question_data["user_id"] = owner_data_value
+        if owner_data_key == "display_name":
+            question_data["display_name"] = owner_data_value
+
+    # Individual questions are not forced to have all fields present,
+    # this logic prevents fields that aren't present in a question from
+    # being appended as empty or raising an exception during runtime
+    for key, data_field in question.items():
+        if key in QUESTION_FIELDS:
+            question_data[key] = question[key]
+
+        # Serializer expects datetime, not timestamp as returned by SO
+        if ( key in ["last_activity_date", "creation_date", "last_edit_date"] ):
+            try:
+                question_data[key] = convertMSToDateTime(question_data[key])
+            except TypeError as e:
+                return {"error": f"Error: {e}"}
+
+
 def sanitiseStackOverflowResponse(json_response):
+
+    if not isinstance(json_response, json):
+        raise TypeError("json_response must be of type json")
+
     # full data set contains additional meta data that is unnecessary. This call strips away that meta data.
-    complete_question_set = getQuestionsOnlyFromStackOverflowResponse(json_response)
+    try:
+        complete_question_set = getOnlyQuestionsFromStackOverflowResponse(json_response)
+    except (TypeError, KeyError, ValueError) as e:
+        return {"error": f"Error: {e}"}
 
     sanitised_data = []
 
     for question in complete_question_set:
-        question_data = {}
-
-        question_data["tags"] = convertListToString(question["tags"], ",")
-
-        # The owner data is stored as a nested dict within the parent question data
-        for owner_data_key, owner_data_value in question["owner"].items():
-            if owner_data_key == "user_id":
-                question_data["user_id"] = owner_data_value
-            if owner_data_key == "display_name":
-                question_data["display_name"] = owner_data_value
-
-        # Individual questions are not forced to have all fields present,
-        # this logic prevents fields that aren't present in a question from
-        # being appended as empty or raising an exception during runtime
-        for key, data_field in question.items():
-            if key in QUESTION_FIELDS:
-                question_data[key] = question[key]
-
-            # Serializer expects datetime, not timestamp as returned by SO
-            if (
-                key == "last_activity_date"
-                or key == "creation_date"
-                or key == "last_edit_date"
-            ):
-                question_data[key] = convertMSToDateTime(question_data[key])
-
-        sanitised_data.append(question_data)
+        try:
+            sanitised_data.append(getQuestionData(question))
+        except (TypeError, KeyError) as e:
+            return {"error": f"Error: {e}"}
 
     return sanitised_data
 
@@ -254,6 +303,4 @@ def queryStackOverflow(category, query, filters) -> dict:
 
     json_response = json.loads(query_response.content)
 
-    sanitised_data_for_return = sanitiseStackOverflowResponse(json_response)
-
-    return sanitised_data_for_return
+    return sanitiseStackOverflowResponse(json_response)
