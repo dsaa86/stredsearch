@@ -1,4 +1,4 @@
-import stackquery
+from  stredsearch.search.custom_functionality  import stackquery
 
 class TestStackQuery:
 

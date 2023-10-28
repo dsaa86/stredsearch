@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from django.http import Http404
 from rest_framework.response import Response
 from rest_framework import status
-from search.stackquery import *
+from search.custom_functionality.stackquery import queryStackOverflow
 from search.redditquery import *
 import html5lib
 

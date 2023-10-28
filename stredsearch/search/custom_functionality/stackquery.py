@@ -4,25 +4,6 @@ from datetime import datetime
 import zoneinfo
 from django.utils.dateparse import parse_datetime
 
-# params = {
-#     "client_id" : "27411",
-#     "client_secret" : "Ytvd5*Gmt8e0s1uIOK7slw((",
-#     "code" : "J2hKGBSiHNxqiLRcooJVmA))",
-#     "redirect_uri" : "https://github.com"
-# }
-
-# url = "https://stackoverflow.com/oauth/access_token"
-
-# x = requests.post(url, data=params)
-
-# print(x.content)
-# print(x.url)
-
-# ACCESS TOKEN = nlyaZ4k0mlpD6ythDJuEGw))
-
-# pp = pprint.PrettyPrinter(width=150, compact=True)
-
-
 ACCESS_ROUTES = {
     "meta": {
         "route_prepend": "https://api.stackexchange.com",
@@ -299,7 +280,35 @@ def queryStackOverflow(category, query, filters) -> dict:
         query_response = requests.get(url, params)
     # Error raised typically when there is no internet connection on the client device
     except requests.exceptions.SSLError as e:
-        return {"error": f"Error: Requests SSLError, {e.strerror}"}
+        return {"error": {
+                    "SSLError": f"{e.strerror}"
+                    }
+                }
+    except requests.exceptions.Timeout as e:
+        return {"error": {
+                    "Timeout": f"{e.strerror}"
+                    }
+                }
+    except requests.exceptions.ConnectionError as e:
+        return {"error": {
+                    "ConnectionError": f"{e.strerror}"
+                    }
+                }
+    except requests.exceptions.HTTPError as e:
+        return {"error": {
+                    "HTTPError": f"{e.strerror}"
+                    }
+                }
+    except requests.exceptions.TooManyRedirects as e:
+        return {"error": {
+                    "TooManyRedirects": f"{e.strerror}"
+                    }
+                }
+    except requests.exceptions.RequestException as e:
+        return {"error": {
+                    "RequestException": f"{e.strerror}"
+                    }
+                }
 
     json_response = json.loads(query_response.content)
 
