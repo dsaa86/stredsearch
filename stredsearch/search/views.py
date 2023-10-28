@@ -17,8 +17,6 @@ from search.stackquery import *
 from search.redditquery import *
 import html5lib
 
-
-
 class GetUserByName(APIView):
     def get(self, request, display_name):
         try:
@@ -32,17 +30,11 @@ class GetUserByName(APIView):
 class AddNewUser(APIView):
     def get(self, request, display_name, user_id):
         results = StackUserSerializer([{"display_name": display_name, "user_id": user_id}], many=True).data
-
         new_user = StackUser.objects.create(display_name=display_name, user_id=user_id)
-
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
-
         data = {"display_name": display_name, "user_id": user_id}
-
         task_queue.enqueue(task_execute, data)
-
         # task_execute.delay(name)
-
         return Response(results)
 
 
