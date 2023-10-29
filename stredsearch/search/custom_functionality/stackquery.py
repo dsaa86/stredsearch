@@ -1,11 +1,10 @@
 import json
 import zoneinfo
 from datetime import datetime
-from typing import Type
 
 import requests
 from django.utils.dateparse import parse_datetime
-from models import *
+from models import StackQuestionDataFields, StackRoute, StackRouteMeta
 
 META_DATA = {
     "route_prepend": "https://api.stackexchange.com",
