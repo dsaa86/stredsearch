@@ -25,6 +25,7 @@ urlpatterns = [
     path("reddit/get/query/<str:query_type>/<str:sub_reddit>/<str:query>/<int:limit>/", views.GetRedditQuery.as_view()),
 
     # Meta Routes
+    path("admin/initialisedb/", views.InitialiseDatabase.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

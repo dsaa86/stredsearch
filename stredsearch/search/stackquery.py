@@ -3,15 +3,19 @@ import zoneinfo
 from datetime import datetime
 
 import requests
+
 from django.utils.dateparse import parse_datetime
 from models import StackQuestionDataFields, StackRoute, StackRouteMeta
+
 
 def queryStackOverflow(category, query, filters) -> dict:
     route_prepend = getRoutePrepend()
     query_route = getAPIRoute(category, query)
     url = route_prepend + query_route
+    # url = "https://api.stackexchange.com/2.3/questions"
     params = filters
     params["site"] = getRouteAppend()
+    # params["site"] = "stackoverflow"
 
     try:
         query_response = requests.get(url, params)
@@ -30,6 +34,10 @@ def queryStackOverflow(category, query, filters) -> dict:
         return { "error": { "RequestException": f"{ e.strerror }" } }
 
     json_response = json.loads(query_response.content)
+
+    # print(json_response)
+
+    print(sanitiseStackOverflowResponse(json_response))
 
     return sanitiseStackOverflowResponse(json_response)
 
@@ -50,7 +58,7 @@ def getRouteAppend() -> str:
 
 def sanitiseStackOverflowResponse(json_response):
 
-    if not isinstance(json_response, json):
+    if not isinstance(json_response, dict):
         raise TypeError("json_response must be of type json")
 
     # full data set contains additional meta data that is unnecessary. This call strips away that meta data.
@@ -62,6 +70,7 @@ def sanitiseStackOverflowResponse(json_response):
     sanitised_data = []
 
     for question in complete_question_set:
+        print(question)
         try:
             sanitised_data.append(getQuestionData(question))
         except (TypeError, KeyError) as e:
@@ -70,9 +79,9 @@ def sanitiseStackOverflowResponse(json_response):
     return sanitised_data
 
 
-def getOnlyQuestionsFromStackOverflowResponse(json_response: json) -> dict:
+def getOnlyQuestionsFromStackOverflowResponse(json_response: dict) -> dict:
 
-    if not isinstance(json_response, json):
+    if not isinstance(json_response, dict):
         raise TypeError("json_response must be of type json")
     if "items" not in json_response.keys():
         raise KeyError("json_response must contain a key named 'items'")
@@ -127,6 +136,8 @@ def convertListToString(list_to_convert: list, delimiter: str = None) -> str:
         raise TypeError("list_to_convert must be of type list")
     if delimiter != None and not isinstance(delimiter, str):
         raise TypeError("delimiter must be of type string")
+    if delimiter != None and delimited != ",":
+        raise TypeError("Delimiter must be None (default) or comma (',')")
 
     return_string = ""
     for index, value in enumerate(list_to_convert):
@@ -162,6 +173,10 @@ def extractOwnerData(question: dict, key: str) -> str:
         
 
 def extractRelevantQuestionDataFieldsForQuestion(question: dict) -> dict:
+
+    if not isinstance(question, dict):
+        raise TypeError("question must be of type dict")
+
     all_possible_question_data_fields = getQuestionDataFields()
     matched_data_fields = {}
     for key, _ in question.items():
@@ -196,7 +211,7 @@ def convertMSToDateTime(ms_value: int) -> object:
 
 
 
-
+queryStackOverflow("questions", "question_by_tag", {"tagged": "python", "sort": "activity", "order": "desc", "site": "stackoverflow", "pagesize": 100, "page": 1})
 
 
 

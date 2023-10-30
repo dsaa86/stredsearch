@@ -1,14 +1,15 @@
 import django_rq
 import html5lib
+from custom_functionality.databaseinitialisation import DatabaseInitialisation
 from django.http import Http404
 from rest_framework import generics, mixins, status
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from search.custom_functionality.stackquery import queryStackOverflow
 from search.models import *
-from search.redditquery import *
+# from search.redditquery import *
 from search.serializers import *
+from stackquery import queryStackOverflow
 
 from .models import *
 from .serializers import *
@@ -47,6 +48,15 @@ class GetStackOverflowOrderMethods(APIView):
 
 class GetStackOverflowQuestionDataFields(APIView):
     pass
+
+class InitialiseDatabase(APIView):
+    def get(self, request):
+        self.dbinit = DatabaseInitialisation()
+        if self.dbinit.initialiseDatabase():
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class GetUserByName(APIView):
     def get(self, request, display_name):
