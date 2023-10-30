@@ -13,6 +13,10 @@ urlpatterns = [
     path("stack/get/all_tags/", views.GetStackOverflowAllTags.as_view()),
     path("stack/get/params/<str:route>/", views.GetStackOverflowParams.as_view()),
     path("stack/get/routes/", views.GetStackOverflowRoutes.as_view()),
+    path("stack/get/filters/<str:route>/", views.GetStackOverflowFilters.as_view()),
+    path("stack/get/sort_methods/", views.GetStackOverflowSortMethods.as_view()),
+    path("stack/get/order_methods/", views.GetStackOverflowOrderMethods.as_view()),
+    path("stack/get/question_data_fields/", views.GetStackOverflowQuestionDataFields.as_view()),
 
     # Reddit Routes
     # GET data

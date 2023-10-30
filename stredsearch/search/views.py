@@ -1,21 +1,52 @@
-from rest_framework.views import APIView
+import django_rq
+import html5lib
+from django.http import Http404
+from rest_framework import generics, mixins, status
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from search.custom_functionality.stackquery import queryStackOverflow
+from search.models import *
+from search.redditquery import *
+from search.serializers import *
+
 from .models import *
 from .serializers import *
 from .tasks import *
-import django_rq
-from search.models import *
-from search.serializers import *
-from rest_framework import mixins
-from rest_framework import generics
-from rest_framework.views import APIView
-from django.http import Http404
-from rest_framework.response import Response
-from rest_framework import status
-from search.custom_functionality.stackquery import queryStackOverflow
-from search.redditquery import *
-import html5lib
+
+
+class GetStackOverflowQuestionsByTag(APIView):
+    pass
+
+class GetStackOverflowRelatedQuestions(APIView):
+    pass
+
+class GetStackOverflowSimpleSearch(APIView):
+    pass
+
+class GetStackOverflowAdvancedSearch(APIView):
+    pass
+
+class GetStackOverflowAllTags(APIView):
+    pass
+
+class GetStackOverflowParams(APIView):
+    pass
+
+class GetStackOverflowRoutes(APIView):  
+    pass
+
+class GetStackOverflowFilters(APIView):
+    pass
+
+class GetStackOverflowSortMethods(APIView):
+    pass
+
+class GetStackOverflowOrderMethods(APIView):
+    pass
+
+class GetStackOverflowQuestionDataFields(APIView):
+    pass
 
 class GetUserByName(APIView):
     def get(self, request, display_name):
@@ -119,7 +150,7 @@ class GetStackoverflowData(APIView):
         #
         # 2.    .queryStackOverflow -> Most of the sanitisation for
         #       the query is performed within the SO search library.
-        #       The necessary data is passed to the library and a
+        #       The necessary data is passed to this function and a
         #       data set is returned.
         #
         # 3.    The results are serialized and passed to the response

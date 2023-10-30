@@ -6,103 +6,6 @@ import requests
 from django.utils.dateparse import parse_datetime
 from models import StackQuestionDataFields, StackRoute, StackRouteMeta
 
-META_DATA = {
-    "route_prepend": "https://api.stackexchange.com",
-    "route_append": {
-        "site": "stackoverflow",
-    },
-}
-
-FILTERS = {
-    "fromdate": "filter by oldest age of question",
-    "todate": "filter by youngest age of question",
-    "min": "filter by youngest possible age of question",
-    "max": "filter by oldest possible age of question",
-    "page": "the page number of results to show",
-    "pagesize": "the number of results per page (max 100)",
-    "order": {
-        "asc": "order by ascending order",
-        "desc": "order by descending order",
-    },
-    "sort": {
-        "activity": "sort by recent activity",
-        "votes": "sort by number of votes",
-        "creation": "sort by creation date",
-        "hot": "sort by current popularity of question",
-        "week": "sort by creation week",
-        "month": "sort by creation month",
-    },
-}
-
-ACCESS_ROUTES = {
-    "questions": {
-        "question_by_tag": {
-            "route": "/2.3/questions",
-            "params": {
-                "tagged": "tags that describe the question topic, e.g. 'python'",
-            },
-        },
-        "related_questions": {
-            "route": "/2.3/questions/{ids}/linked",
-            "params": {
-                "ids": "the id(s) of questions for which to find other, related questions",
-                "test": "",
-            },
-        },
-    },
-    "search": {
-        "search": {
-            "route": "/2.3/search",
-            "params": {
-                "tagged": "the tags by which to search for questions",
-                "nottagged": "tags of questions to be omitted from the search",
-                "intitle": "text that should be present in the title of the question",
-            },
-        },
-        "advanced-search": {
-            "route": "/2.3/search/advanced",
-            "params": {
-                "q": "free form text",
-                "accepted": "boolean - True returns only qs with accepted answers",
-                "answers": "minimum number of answers a q must have received",
-                "body": "text which must appear in question bodies",
-                "closed": "True returns only closed questions, False returns only open qs, omitted returns any",
-                "migrated": "True returns only qs migrated to another site, False returns only qs not migrated, omitted returns any",
-                "notice": "True returns only qs with post notices, false returns only those without, omit returns any",
-                "nottagged": "semicolon delimted list of tags, none will be present in q - must have at least one other parameter completed in order to be valid",
-                "tagged": "semicolon delimted list of tags, at least one will be present in a w",
-                "title": "text which must appear in q titles",
-                "user": "the id of the user who must own the q",
-                "url": "a url which must be returned in a post, may include wildcards",
-                "views": "the minimum number of views returned qs must have",
-                "wiki": "true returns only communited wiki qs, false returns only non-communited wiki qs, omit returns any",
-            },
-        },
-    },
-}
-
-QUESTION_FIELDS = [
-    "is_answered",
-    "view_count",
-    "answer_count",
-    "score",
-    "last_activity_date",
-    "creation_date",
-    "last_edit_date",
-    "question_id",
-    "link",
-    "title",
-]
-
-
-
-
-
-
-
-
-
-
 def queryStackOverflow(category, query, filters) -> dict:
     route_prepend = getRoutePrepend()
     query_route = getAPIRoute(category, query)
@@ -112,7 +15,7 @@ def queryStackOverflow(category, query, filters) -> dict:
 
     try:
         query_response = requests.get(url, params)
-    # Error raised typically when there is no internet connection on the client device
+    # SSLError raised typically when there is no internet connection on the client device
     except requests.exceptions.SSLError as e:
         return { "error": { "SSLError": f"{ e.strerror }" } }
     except requests.exceptions.Timeout as e:
