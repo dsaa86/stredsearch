@@ -1,15 +1,15 @@
 import django_rq
 import html5lib
-from custom_functionality.databaseinitialisation import DatabaseInitialisation
 from django.http import Http404
 from rest_framework import generics, mixins, status
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from search.databaseinitialisation import DatabaseInitialisation
 from search.models import *
 # from search.redditquery import *
 from search.serializers import *
-from stackquery import queryStackOverflow
+from search.stackquery import queryStackOverflow
 
 from .models import *
 from .serializers import *
@@ -26,28 +26,59 @@ class GetStackOverflowSimpleSearch(APIView):
     pass
 
 class GetStackOverflowAdvancedSearch(APIView):
-    pass
+    def get(self, request):
+        pass
 
 class GetStackOverflowAllTags(APIView):
-    pass
+    def get(self, request):
+        tags = StackTags.objects.all()
+        results = StackTagsSerializer(tags, many=True).data
+        return Response(results)
 
+class GetAllStackOverflowParams(APIView):
+    def get(self, request):
+        params = StackParams.objects.all()
+        results = StackParamsSerializer(params, many=True).data
+        return Response(results)
+    
 class GetStackOverflowParams(APIView):
-    pass
+    def get(self, request):
+        pass
 
 class GetStackOverflowRoutes(APIView):  
-    pass
+    def get(self, request):
+        routes = StackRoute.objects.all()
+        results = StackRouteSerializer(routes, many=True).data
+        return Response(results)
 
+class GetAllStackOverflowFilters(APIView):
+    def get(self, request):
+        filters = StackFilters.objects.all()
+        results = StackFiltersSerializer(filters, many=True).data
+        return Response(results)
+    
 class GetStackOverflowFilters(APIView):
-    pass
+    def get(self, request):
+        pass
 
 class GetStackOverflowSortMethods(APIView):
-    pass
+    def get(self, request):
+        sort_methods = StackSortMethods.objects.all()
+        results = StackSortMethodsSerializer(sort_methods, many=True).data
+        return Response(results)
 
 class GetStackOverflowOrderMethods(APIView):
-    pass
+    def get(self, request):
+        order_methods = StackOrderMethods.objects.all()
+        results = StackOrderMethodsSerializer(order_methods, many=True).data
+        return Response(results)
 
 class GetStackOverflowQuestionDataFields(APIView):
-    pass
+    def get(self,request):
+        question_data_fields = StackQuestionDataFields.objects.all()
+        results = StackQuestionDataFieldsSerializer(question_data_fields, many=True).data
+        return Response(results)
+
 
 class InitialiseDatabase(APIView):
     def get(self, request):
@@ -134,22 +165,7 @@ class GetStackoverflowData(APIView):
 
         return params_dict
 
-    def get(
-        self,
-        request,
-        category,
-        query,
-        page,
-        pagesize,
-        fromdate,
-        todate,
-        order,
-        min,
-        max,
-        sort,
-        tagged,
-        format=None,
-    ):
+    def get(self, request, category, query, page, pagesize, fromdate, todate, order, min, max, sort, tagged, format=None):
         #
         # LOGIC FOR RETRIEVING STACKOVERFLOW QUESTIONS
         #
@@ -193,7 +209,7 @@ class GetStackoverflowData(APIView):
         return Response(results)
 
 
-class GetRedditData(APIView):
+# class GetRedditData(APIView):
     # TODO This needs refactoring so that the heavy lifting is done within the library and not here. | CREATED: 12:37 23/10/2023
     #
     # LOGIC FLOW FOR RETRIEVING REDDIT QUESTIONS:
@@ -236,57 +252,57 @@ class GetRedditData(APIView):
     #       this returned as a part of the response.
     #
 
-    def getRedditTerms(self, terms: dict, subred) -> list:
-        return searchRedditAndReturnResponse(terms, subred)
+    # def getRedditTerms(self, terms: dict, subred) -> list:
+    #     return searchRedditAndReturnResponse(terms, subred)
 
-    def buildTermsFromParams(self, q: str, type: str, limit: str) -> dict:
-        terms = {
-            "q": f"{q}",
-            "type": f"{type}",
-            "limit": f"{limit}",
-        }
+    # def buildTermsFromParams(self, q: str, type: str, limit: str) -> dict:
+    #     terms = {
+    #         "q": f"{q}",
+    #         "type": f"{type}",
+    #         "limit": f"{limit}",
+    #     }
 
-        return terms
+    #     return terms
 
-    def parseRedditSearchResults(self, search_results: dict) -> list:
-        formatted_results_set = []
+    # def parseRedditSearchResults(self, search_results: dict) -> list:
+    #     formatted_results_set = []
 
-        for tuple in search_results:
-            result = {"title": f"{tuple[0]}", "link": f"https://reddit.com{tuple[1]},"}
+    #     for tuple in search_results:
+    #         result = {"title": f"{tuple[0]}", "link": f"https://reddit.com{tuple[1]},"}
 
-            formatted_results_set.append(result)
+    #         formatted_results_set.append(result)
 
-        return formatted_results_set
+    #     return formatted_results_set
 
-    def buildSubredFromParams(self, subreds):
-        return subreds.split(",")
+    # def buildSubredFromParams(self, subreds):
+    #     return subreds.split(",")
 
-    def get(self, request, subred, q, type, limit, format=None):
-        # PARAMS STRUCTURE
-        # terms = {
-        #     'q' : 'exception raised during for loop python',
-        #     'type' : '{ sr | link | user } --> AND = comma delimited',
-        #     'limit' : '100'
-        # }
+    # def get(self, request, subred, q, type, limit, format=None):
+    #     # PARAMS STRUCTURE
+    #     # terms = {
+    #     #     'q' : 'exception raised during for loop python',
+    #     #     'type' : '{ sr | link | user } --> AND = comma delimited',
+    #     #     'limit' : '100'
+    #     # }
 
-        # subred = '/r/{subredname}'
+    #     # subred = '/r/{subredname}'
 
-        search_terms = self.buildTermsFromParams(q, type, limit)
+    #     search_terms = self.buildTermsFromParams(q, type, limit)
 
-        subred_list = self.buildSubredFromParams(subred)
+    #     subred_list = self.buildSubredFromParams(subred)
 
-        total_search_result_set = []
+    #     total_search_result_set = []
 
-        for elem in subred_list:
-            reddit_search_results = self.getRedditTerms(search_terms, "/r/" + subred)
-            total_search_result_set = (
-                total_search_result_set
-                + self.parseRedditSearchResults(reddit_search_results)
-            )
+    #     for elem in subred_list:
+    #         reddit_search_results = self.getRedditTerms(search_terms, "/r/" + subred)
+    #         total_search_result_set = (
+    #             total_search_result_set
+    #             + self.parseRedditSearchResults(reddit_search_results)
+    #         )
 
-        results = RedditSearchQuerySerializer(total_search_result_set, many=True).data
+    #     results = RedditSearchQuerySerializer(total_search_result_set, many=True).data
 
-        return Response(results)
+    #     return Response(results)
 
 
 # class QuestionList(mixins.ListModelMixin, generics.GenericAPIView):

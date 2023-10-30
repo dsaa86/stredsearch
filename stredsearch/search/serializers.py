@@ -2,6 +2,39 @@ from rest_framework import serializers
 from search.models import *
 
 
+class StackTagsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackTags
+        fields = "__all__"
+
+class StackParamsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackParams
+        fields = "__all__"
+
+class StackFiltersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackFilters
+        fields = "__all__"
+
+class StackSortMethodsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackSortMethods
+        fields = "__all__"
+
+
+class StackOrderMethodsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackOrderMethods
+        fields = "__all__"
+
+class StackQuestionDataFieldsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackQuestionDataFields
+        fields = "__all__"
+
+
+
 class StackQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = StackQuestion
@@ -22,7 +55,7 @@ class StackRouteSerializer(serializers.ModelSerializer):
 
 class StackMetaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = StackMeta
+        model = StackRouteMeta
         fields = "__all__"
 
 

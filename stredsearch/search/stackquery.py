@@ -3,9 +3,8 @@ import zoneinfo
 from datetime import datetime
 
 import requests
-
 from django.utils.dateparse import parse_datetime
-from models import StackQuestionDataFields, StackRoute, StackRouteMeta
+from search.models import StackQuestionDataFields, StackRoute, StackRouteMeta
 
 
 def queryStackOverflow(category, query, filters) -> dict:
@@ -21,23 +20,21 @@ def queryStackOverflow(category, query, filters) -> dict:
         query_response = requests.get(url, params)
     # SSLError raised typically when there is no internet connection on the client device
     except requests.exceptions.SSLError as e:
-        return { "error": { "SSLError": f"{ e.strerror }" } }
+        return { "error": { "SSLError": f"{ e }" } }
     except requests.exceptions.Timeout as e:
-        return { "error": { "Timeout": f"{ e.strerror }" } }
+        return { "error": { "Timeout": f"{ e }" } }
     except requests.exceptions.ConnectionError as e:
-        return { "error": { "ConnectionError": f"{ e.strerror }" } }
+        return { "error": { "ConnectionError": f"{ e }" } }
     except requests.exceptions.HTTPError as e:
-        return { "error": { "HTTPError": f"{ e.strerror }" } }
+        return { "error": { "HTTPError": f"{ e }" } }
     except requests.exceptions.TooManyRedirects as e:
-        return { "error": { "TooManyRedirects": f"{ e.strerror }" } }
+        return { "error": { "TooManyRedirects": f"{ e }" } }
     except requests.exceptions.RequestException as e:
-        return { "error": { "RequestException": f"{ e.strerror }" } }
+        return { "error": { "RequestException": f"{ e }" } }
 
     json_response = json.loads(query_response.content)
 
     # print(json_response)
-
-    print(sanitiseStackOverflowResponse(json_response))
 
     return sanitiseStackOverflowResponse(json_response)
 
@@ -70,7 +67,6 @@ def sanitiseStackOverflowResponse(json_response):
     sanitised_data = []
 
     for question in complete_question_set:
-        print(question)
         try:
             sanitised_data.append(getQuestionData(question))
         except (TypeError, KeyError) as e:
@@ -116,11 +112,11 @@ def getQuestionData(question:dict) -> dict:
         question_data["user_id"] = extractOwnerData(question, "user_id")
         question_data["display_name"] = extractOwnerData(question, "display_name")
     except TypeError as e:
-        return { "error": { "TypeError": f"{ e.strerror }" } }
+        return { "error": { "TypeError": f"{ e }" } }
     except KeyError as e:
-        return { "error": { "KeyError": f"{ e.strerror }" } }
+        return { "error": { "KeyError": f"{ e }" } }
     except ValueError as e:
-        return { "error": { "ValueError": f"{ e.strerror }" } }
+        return { "error": { "ValueError": f"{  e }" } }
 
     # Individual questions are not forced to have all fields present,
     # this logic prevents fields that aren't present in a question from
@@ -136,7 +132,7 @@ def convertListToString(list_to_convert: list, delimiter: str = None) -> str:
         raise TypeError("list_to_convert must be of type list")
     if delimiter != None and not isinstance(delimiter, str):
         raise TypeError("delimiter must be of type string")
-    if delimiter != None and delimited != ",":
+    if delimiter != None and delimiter != ",":
         raise TypeError("Delimiter must be None (default) or comma (',')")
 
     return_string = ""
@@ -188,7 +184,7 @@ def extractRelevantQuestionDataFieldsForQuestion(question: dict) -> dict:
             try:
                 matched_data_fields[key] = convertMSToDateTime(matched_data_fields[key])
             except TypeError as e:
-                return {"error": { "TypeError" : f"{ e.strerror }" } }
+                return {"error": { "TypeError" : f"{ e }" } }
     return matched_data_fields
 
 
@@ -211,7 +207,7 @@ def convertMSToDateTime(ms_value: int) -> object:
 
 
 
-queryStackOverflow("questions", "question_by_tag", {"tagged": "python", "sort": "activity", "order": "desc", "site": "stackoverflow", "pagesize": 100, "page": 1})
+# queryStackOverflow("questions", "question_by_tag", {"tagged": "python", "sort": "activity", "order": "desc", "site": "stackoverflow", "pagesize": 100, "page": 1})
 
 
 

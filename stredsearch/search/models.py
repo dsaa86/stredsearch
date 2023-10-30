@@ -36,7 +36,7 @@ class StackRoute(models.Model):
     route_category = models.CharField(blank=False, default="", max_length=200)
     route_query = models.CharField(blank=False, default="", max_length=200)
     route = models.CharField(blank=False, default="", max_length=200)
-    params = models.ManyToManyField(StackParams, blank=True)
+    params = models.ManyToManyField(StackParams)
 
 
 class StackRouteMeta(models.Model):

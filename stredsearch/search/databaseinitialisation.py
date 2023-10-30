@@ -1,6 +1,6 @@
 from xmlrpc.client import Boolean
 
-from models import *
+from search.models import *
 
 
 class DatabaseInitialisation():
@@ -8,8 +8,25 @@ class DatabaseInitialisation():
         pass
 
     def initialiseDatabase(self) -> Boolean:
-        if self.createStackParams() and self.createStackSortMethods() and self.createStackOrderMethods() and self.createStackFilters() and self.createStackQuestionDataFields() and self.createStackRoute() and self.createStackRouteMeta():
-            return True
+
+        success = True
+
+        if not self.createStackParams():
+            success = False
+        if not self.createStackSortMethods():
+            success = False
+        if not self.createStackOrderMethods():
+            success = False
+        if not self.createStackFilters():
+            success = False
+        if not self.createStackQuestionDataFields():
+            success = False
+        if not self.createStackRoute():
+            success = False
+        if not self.createStackRouteMeta():
+            success = False
+            
+        return success
 
 
     def createStackParams(self):
@@ -29,6 +46,8 @@ class DatabaseInitialisation():
             self.views_param = StackParams.objects.get_or_create(param_name="views", param_description="The minimum number of views returned questions must have")
             self.wiki_param = StackParams.objects.get_or_create(param_name="wiki", param_description="True to return only community wiki questions, false to return only non-community wiki ones. Omit to elide constraint")
             self.intitle_param = StackParams.objects.get_or_create(param_name="intitle", param_description="A string that must appear verbatim in the title of a question")
+            self.blank_param = StackParams.objects.get_or_create(param_name="Blank", param_description="Blank")
+
             return True
         except Exception as e:
             print(e)
@@ -92,13 +111,38 @@ class DatabaseInitialisation():
 
     def createStackRoute(self):
         try:
-            self.question_by_tag_route = StackRoute.objects.get_or_create(route_category="questions", route_query="question_by_tag", route="/2.3/questions", params=[self.tagged_param])
+            self.question_by_tag_route = StackRoute.objects.get_or_create(route_category="questions", route_query="question_by_tag", route="/2.3/questions")
+            self.question_by_tag_route = StackRoute.objects.filter(route = "/2.3/questions").first()
+            self.question_by_tag_route.params.add(StackParams.objects.filter(param_name="tagged").first())
 
-            self.related_questions_route = StackRoute.objects.get_or_create(route_category="questions", route_query="related_questions", route="/2.3/questions/{question_ids}/related", params=[self.question_id_field])
+            self.related_questions_route = StackRoute.objects.get_or_create(route_category="questions", route_query="related_questions", route="/2.3/questions/{question_ids}/related")
+            self.related_questions_route = StackRoute.objects.filter(route="/2.3/questions/{question_ids}/related").first()
+            self.related_questions_route.params.add(StackParams.objects.filter(param_name="Blank").first())
 
-            self.search_route = StackRoute.objects.get_or_create(route_category="search", route_query="search", route="/2.3/search", params=[self.nottagged_param, self.tagged_param, self.intitle_param])
+            self.search_route = StackRoute.objects.get_or_create(route_category="search", route_query="search", route="/2.3/search")
+            self.search_route = StackRoute.objects.filter(route="/2.3/search").first()
+            self.search_route.params.add(StackParams.objects.filter(param_name="nottagged").first())
+            self.search_route.params.add(StackParams.objects.filter(param_name="tagged").first())
+            self.search_route.params.add(StackParams.objects.filter(param_name="intitle").first())
+            
 
-            self.advanced_route = StackRoute.objects.get_or_create(route_category="search", route_query="advanced-search", route="/2.3/search/advanced", params=[self.question_param, self.accepted_param, self.answers_param, self.body_param, self.closed_param, self.migrated_param, self.notice_param, self.nottagged_param, self.tagged_param, self.title_param, self.user_param, self.url_param, self.views_param, self.wiki_param])
+            self.advanced_route = StackRoute.objects.get_or_create(route_category="search", route_query="advanced-search", route="/2.3/search/advanced")
+            self.advanced_route = StackRoute.objects.filter(route="/2.3/search/advanced").first()
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="q").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="accepted").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="answers").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="body").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="closed").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="migrated").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="notice").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="nottagged").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="tagged").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="title").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="user").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="url").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="views").first())
+            self.advanced_route.params.add(StackParams.objects.filter(param_name="wiki").first())
+
             return True
         except Exception as e:
             print(e)
