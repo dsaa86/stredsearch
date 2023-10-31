@@ -9,21 +9,17 @@ from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from search.databaseinitialisation import DatabaseInitialisation
-from search.helperfunctions import processFilters, removeBlankParams
+from search.helperfunctions import processFilters
 from search.models import *
 # from search.redditquery import *
 from search.serializers import *
 from search.stackquery import queryStackOverflow
-
-from .models import *
-from .serializers import *
-from .tasks import *
+from search.tasks import *
 
 
 class GetStackOverflowQuestionsByTag(APIView):
 
-    def get(self, request, page, pagesize, fromdate, todate, order, min, max, sort, tags, format=None):
-        routing_data = StackRoute.objects.filter(route_category="questions", route_query="question_by_tag").first()
+    def get(self, request, page, pagesize, fromdate, todate, order, sort, tags, format=None):
 
         params_dict = {
             "page": page,
@@ -31,15 +27,13 @@ class GetStackOverflowQuestionsByTag(APIView):
             "fromdate": fromdate,
             "todate": todate,
             "order": order,
-            "min": min,
-            "max": max,
             "sort": sort,
             "tagged": tags,
         }
 
         processed_filters = processFilters(params_dict)
 
-        total_search_result_set = queryStackOverflow(routing_data.route_category, routing_data.route_query, processed_filters)
+        total_search_result_set = queryStackOverflow("questions", "question_by_tag", processed_filters)
 
         for result in total_search_result_set:
             print(result)
@@ -57,7 +51,7 @@ class GetStackOverflowQuestionsByTag(APIView):
 
 class GetStackOverflowRelatedQuestions(APIView):
 
-    def get(self, request, page, pagesize, fromdate, todate, order, min, max, sort, ids, format=None):
+    def get(self, request, page, pagesize, fromdate, todate, order, sort, ids, format=None):
         
         params_dict = {
             "page": page,
@@ -65,8 +59,6 @@ class GetStackOverflowRelatedQuestions(APIView):
             "fromdate": fromdate,
             "todate": todate,
             "order": order,
-            "min": min,
-            "max": max,
             "sort": sort,
             "ids": ids,
         }
@@ -83,13 +75,69 @@ class GetStackOverflowRelatedQuestions(APIView):
         return Response(results)
 
 class GetStackOverflowSimpleSearch(APIView):
-    pass
+    def get(self, request, page, pagesize, fromdate, todate, order, min, max, sort, nottagged, tagged, intitle, format=None):
+        
+        params_dict = {
+            "page": page,
+            "pagesize": pagesize,
+            "fromdate": fromdate,
+            "todate": todate,
+            "order": order,
+            "sort": sort,
+            "nottagged": nottagged,
+            "tagged": tagged,
+            "intitle": intitle,
+        }
+
+        processed_filters = processFilters(params_dict)
+
+        total_search_result_set = queryStackOverflow("search", "search", processed_filters)
+
+        if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
+            results = StackSearchErrorSerializer(total_search_result_set).data
+        else:
+            results = StackSearchQuerySerializer(total_search_result_set, many=True).data
+
+        return Response(results)
 
 class GetStackOverflowAdvancedSearch(APIView):
-    def get(self, request):
-        pass
+    def get(self, request, page, pagesize, fromdate, todate, order, min, max, sort, q, accepted, answers, body, closed, migrated, notice, nottagged, tagged, title, user, url, views, wiki, format=None):
+        
+        params_dict = {
+            "page": page,
+            "pagesize": pagesize,
+            "fromdate": fromdate,
+            "todate": todate,
+            "order": order,
+            "sort": sort,
+            "q": q,
+            "accepted": accepted,
+            "answers": answers,
+            "body": body,
+            "closed": closed,
+            "migrated": migrated,
+            "notice": notice,
+            "nottagged": nottagged,
+            "tagged": tagged,
+            "title": title,
+            "user": user,
+            "url": url,
+            "views": views,
+            "wiki": wiki,
+        }
 
-class GetStackOverflowAllTags(APIView):
+        processed_filters = processFilters(params_dict)
+
+        total_search_result_set = queryStackOverflow("search", "advanced-search", processed_filters)
+
+        if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
+            results = StackSearchErrorSerializer(total_search_result_set).data
+        else:
+            results = StackSearchQuerySerializer(total_search_result_set, many=True).data
+
+        return Response(results)
+
+class GetStackOverflowAllTagsInDB(APIView):
     def get(self, request):
         tags = StackTags.objects.all()
         results = StackTagsSerializer(tags, many=True).data
@@ -201,72 +249,72 @@ class GetStackOverflowRouteURLAndParams(APIView):
         return Response(results)
 
 
-class GetStackoverflowData(APIView):
-    def removeBlankParams(self, keys_to_delete: list, params_dict: dict) -> dict:
-        for key in keys_to_delete:
-            del params_dict[key]
+# class GetStackoverflowData(APIView):
+#     def removeBlankParams(self, keys_to_delete: list, params_dict: dict) -> dict:
+#         for key in keys_to_delete:
+#             del params_dict[key]
 
-        return params_dict
+#         return params_dict
 
-    def processFilters(self, params_dict: dict) -> dict:
-        keys_to_delete = []
+#     def processFilters(self, params_dict: dict) -> dict:
+#         keys_to_delete = []
 
-        # " " indicates a param not used in this search on the
-        # part of the user.
-        for key, value in params_dict.items():
-            if value == " ":
-                keys_to_delete.append(key)
+#         # " " indicates a param not used in this search on the
+#         # part of the user.
+#         for key, value in params_dict.items():
+#             if value == " ":
+#                 keys_to_delete.append(key)
 
-            # Stack Exchange expects semi-colon delimited list
-            if key == "tagged":
-                params_dict[key] = value.replace(",", ";")
+#             # Stack Exchange expects semi-colon delimited list
+#             if key == "tagged":
+#                 params_dict[key] = value.replace(",", ";")
 
-        params_dict = self.removeBlankParams(keys_to_delete, params_dict)
+#         params_dict = self.removeBlankParams(keys_to_delete, params_dict)
 
-        return params_dict
+#         return params_dict
 
-    def get(self, request, category, query, page, pagesize, fromdate, todate, order, min, max, sort, tagged, format=None):
-        #
-        # LOGIC FOR RETRIEVING STACKOVERFLOW QUESTIONS
-        #
-        # 1.    .processFilters -> Not all filters are required by a
-        #       user. This function breaks apart user-specified
-        #       filters from those that are not specified for this
-        #       particular query.
-        #
-        # 2.    .queryStackOverflow -> Most of the sanitisation for
-        #       the query is performed within the SO search library.
-        #       The necessary data is passed to this function and a
-        #       data set is returned.
-        #
-        # 3.    The results are serialized and passed to the response
-        #
+#     def get(self, request, category, query, page, pagesize, fromdate, todate, order, min, max, sort, tagged, format=None):
+#         #
+#         # LOGIC FOR RETRIEVING STACKOVERFLOW QUESTIONS
+#         #
+#         # 1.    .processFilters -> Not all filters are required by a
+#         #       user. This function breaks apart user-specified
+#         #       filters from those that are not specified for this
+#         #       particular query.
+#         #
+#         # 2.    .queryStackOverflow -> Most of the sanitisation for
+#         #       the query is performed within the SO search library.
+#         #       The necessary data is passed to this function and a
+#         #       data set is returned.
+#         #
+#         # 3.    The results are serialized and passed to the response
+#         #
 
-        # FIXME Need to account for additional params for the advanced search function. | CREATED: 12:42 23/10/2023
+#         # FIXME Need to account for additional params for the advanced search function. | CREATED: 12:42 23/10/2023
 
-        params_dict = {
-            "page": page,
-            "pagesize": pagesize,
-            "fromdate": fromdate,
-            "todate": todate,
-            "order": order,
-            "min": min,
-            "max": max,
-            "sort": sort,
-            "tagged": tagged,
-        }
+#         params_dict = {
+#             "page": page,
+#             "pagesize": pagesize,
+#             "fromdate": fromdate,
+#             "todate": todate,
+#             "order": order,
+#             "min": min,
+#             "max": max,
+#             "sort": sort,
+#             "tagged": tagged,
+#         }
 
-        processed_filters = self.processFilters(params_dict)
+#         processed_filters = self.processFilters(params_dict)
 
-        total_search_result_set = queryStackOverflow(category, query, processed_filters)
+#         total_search_result_set = queryStackOverflow(category, query, processed_filters)
 
-        results = StackSearchQuerySerializer(total_search_result_set, many=True).data
+#         results = StackSearchQuerySerializer(total_search_result_set, many=True).data
 
-        # commit_questions_to_local_db_signal.send(
-        #     sender=None, questions=total_search_result_set, search_term=None
-        # )
+#         # commit_questions_to_local_db_signal.send(
+#         #     sender=None, questions=total_search_result_set, search_term=None
+#         # )
 
-        return Response(results)
+#         return Response(results)
 
 
 # class GetRedditData(APIView):
