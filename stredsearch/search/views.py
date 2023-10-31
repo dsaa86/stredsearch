@@ -1,11 +1,15 @@
+from multiprocessing import process
+
 import django_rq
 import html5lib
+import requests
 from django.http import Http404
 from rest_framework import generics, mixins, status
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from search.databaseinitialisation import DatabaseInitialisation
+from search.helperfunctions import processFilters, removeBlankParams
 from search.models import *
 # from search.redditquery import *
 from search.serializers import *
@@ -17,10 +21,66 @@ from .tasks import *
 
 
 class GetStackOverflowQuestionsByTag(APIView):
-    pass
+
+    def get(self, request, page, pagesize, fromdate, todate, order, min, max, sort, tags, format=None):
+        routing_data = StackRoute.objects.filter(route_category="questions", route_query="question_by_tag").first()
+
+        params_dict = {
+            "page": page,
+            "pagesize": pagesize,
+            "fromdate": fromdate,
+            "todate": todate,
+            "order": order,
+            "min": min,
+            "max": max,
+            "sort": sort,
+            "tagged": tags,
+        }
+
+        processed_filters = processFilters(params_dict)
+
+        total_search_result_set = queryStackOverflow(routing_data.route_category, routing_data.route_query, processed_filters)
+
+        for result in total_search_result_set:
+            print(result)
+            print()
+            print()
+
+        if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
+            results = StackSearchErrorSerializer(total_search_result_set).data
+        else:
+            results = StackSearchQuerySerializer(total_search_result_set, many=True).data
+
+        return Response(results)
+
+        
 
 class GetStackOverflowRelatedQuestions(APIView):
-    pass
+
+    def get(self, request, page, pagesize, fromdate, todate, order, min, max, sort, ids, format=None):
+        
+        params_dict = {
+            "page": page,
+            "pagesize": pagesize,
+            "fromdate": fromdate,
+            "todate": todate,
+            "order": order,
+            "min": min,
+            "max": max,
+            "sort": sort,
+            "ids": ids,
+        }
+
+        processed_filters = processFilters(params_dict)
+
+        total_search_result_set = queryStackOverflow("questions", "related_questions", processed_filters)
+
+        if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
+            results = StackSearchErrorSerializer(total_search_result_set).data
+        else:
+            results = StackSearchQuerySerializer(total_search_result_set, many=True).data
+
+        return Response(results)
 
 class GetStackOverflowSimpleSearch(APIView):
     pass

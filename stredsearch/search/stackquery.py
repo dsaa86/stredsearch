@@ -4,12 +4,18 @@ from datetime import datetime
 
 import requests
 from django.utils.dateparse import parse_datetime
+from search.exceptionhandlers import InvalidDisplayNameKey, InvalidUserIdKey
 from search.models import StackQuestionDataFields, StackRoute, StackRouteMeta
 
 
 def queryStackOverflow(category, query, filters) -> dict:
     route_prepend = getRoutePrepend()
     query_route = getAPIRoute(category, query)
+
+    if query == "related_questions":
+        query_route = insertQuestionIdsToQueryRoute(query_route, filters["ids"])
+        del filters["ids"]
+
     url = route_prepend + query_route
     # url = "https://api.stackexchange.com/2.3/questions"
     params = filters
@@ -18,39 +24,46 @@ def queryStackOverflow(category, query, filters) -> dict:
 
     try:
         query_response = requests.get(url, params)
+        print(query_response)
     # SSLError raised typically when there is no internet connection on the client device
     except requests.exceptions.SSLError as e:
-        return { "error": { "SSLError": f"{ e }" } }
+        return { "Error": { "SSLError": f"{ e }" } }
     except requests.exceptions.Timeout as e:
-        return { "error": { "Timeout": f"{ e }" } }
+        return { "Error": { "Timeout": f"{ e }" } }
     except requests.exceptions.ConnectionError as e:
-        return { "error": { "ConnectionError": f"{ e }" } }
+        return { "Error": { "ConnectionError": f"{ e }" } }
     except requests.exceptions.HTTPError as e:
-        return { "error": { "HTTPError": f"{ e }" } }
+        return { "Error": { "HTTPError": f"{ e }" } }
     except requests.exceptions.TooManyRedirects as e:
-        return { "error": { "TooManyRedirects": f"{ e }" } }
+        return { "Error": { "TooManyRedirects": f"{ e }" } }
     except requests.exceptions.RequestException as e:
-        return { "error": { "RequestException": f"{ e }" } }
+        return { "Error": { "RequestException": f"{ e }" } }
 
     json_response = json.loads(query_response.content)
-
-    # print(json_response)
 
     return sanitiseStackOverflowResponse(json_response)
 
 
 def getRoutePrepend() -> str:
     prepend = StackRouteMeta.objects.get(pk=1)
-    return prepend['route_prepend']
+    return prepend.route_prepend
 
 
 def getAPIRoute(category, query) -> str:
-    return StackRoute.objects.get(route_category=category, route_query=query)
+    return StackRoute.objects.filter(route_category=category, route_query=query).first().route
 
+
+def insertQuestionIdsToQueryRoute(query_route: str, ids: str) -> str:
+    if not isinstance(query_route, str):
+        raise TypeError("query_route must be of type str")
+    if not isinstance(ids, str):
+        raise TypeError("ids must be of type str")
+
+    return query_route.replace("{question_ids}", ids)
 
 def getRouteAppend() -> str:
     append = StackRouteMeta.objects.get(pk=1)
-    return append['route_append']
+    return append.route_append
 
 
 def sanitiseStackOverflowResponse(json_response):
@@ -102,7 +115,6 @@ def getQuestionData(question:dict) -> dict:
 
     question_data = {}
 
-    
     try:
         question_data['tags'] = convertListToString(question["tags"], ",")
     except TypeError as e:
@@ -110,19 +122,33 @@ def getQuestionData(question:dict) -> dict:
     
     try:
         question_data["user_id"] = extractOwnerData(question, "user_id")
-        question_data["display_name"] = extractOwnerData(question, "display_name")
     except TypeError as e:
-        return { "error": { "TypeError": f"{ e }" } }
-    except KeyError as e:
-        return { "error": { "KeyError": f"{ e }" } }
+        return { "error": { "TypeError": f"{ e }" } } 
     except ValueError as e:
         return { "error": { "ValueError": f"{  e }" } }
+    except InvalidUserIdKey as e:
+        # Sometimes there isn't a user due to user account being deleted on SO - we don't want the programme to crash, which it would if handled as a typical KeyError.
+        pass
+    except KeyError as e:
+        return { "error": { "KeyError": f"{ e }" } }
+    try:
+        question_data["display_name"] = extractOwnerData(question, "display_name")
+    except TypeError as e:
+        return { "error": { "TypeError": f"{ e }" } } 
+    except ValueError as e:
+        return { "error": { "ValueError": f"{  e }" } }
+    except InvalidDisplayNameKey as e:
+        # Sometimes there isn't a user due to user account being deleted on SO - we don't want the programme to crash, which it would if handled as a typical KeyError.
+        pass
+    except KeyError as e:
+        return { "error": { "KeyError": f"{ e }" } }
 
     # Individual questions are not forced to have all fields present,
     # this logic prevents fields that aren't present in a question from
     # being appended as empty or raising an exception during runtime
     question_data_fields_for_question = extractRelevantQuestionDataFieldsForQuestion(question)
     question_data |= question_data_fields_for_question
+
     return question_data
 
 
@@ -154,9 +180,13 @@ def extractOwnerData(question: dict, key: str) -> str:
         raise KeyError("question must contain a key named 'owner'")
     if not isinstance(question["owner"], dict):
         raise TypeError("question['owner'] must be of type dict")
-    if key not in question["owner"].keys():
-        raise KeyError(f"question['owner'] must contain a key named '{key}'")
-    if not isinstance(question["owner"][key], str):
+    if key not in question["owner"].keys() and key == "user_id":
+        raise InvalidUserIdKey()
+    if key not in question["owner"].keys() and key == "display_name":
+        raise InvalidDisplayNameKey()
+    if key == 'user_id' and not isinstance(question["owner"][key], int):
+        raise TypeError(f"question['owner']['{key}'] must be of type int")
+    if key == 'display_name' and not isinstance(question["owner"][key], str):
         raise TypeError(f"question['owner']['{key}'] must be of type str")
     if key not in ["user_id", "display_name"]:
         raise ValueError("key must be one of the following: 'user_id', 'display_name'")

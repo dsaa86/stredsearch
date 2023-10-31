@@ -151,7 +151,7 @@ class DatabaseInitialisation():
 
     def createStackRouteMeta(self):
         try:
-            self.stack_meta = StackRouteMeta.objects.get_or_create(route_prepend="https://api.stackexchange.com", route_append="&site=stackoverflow")
+            self.stack_meta = StackRouteMeta.objects.get_or_create(route_prepend="https://api.stackexchange.com", route_append="stackoverflow")
             return True
         except Exception as e:
             print(e)

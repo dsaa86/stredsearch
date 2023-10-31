@@ -70,8 +70,10 @@ class StackSearchQuerySerializer(serializers.Serializer):
     view_count = serializers.IntegerField()
     answer_count = serializers.IntegerField()
     score = serializers.IntegerField()
-    last_activity_date = serializers.DateTimeField()
+    # There may never have been activity on the question
+    last_activity_date = serializers.DateTimeField(required=False)
     creation_date = serializers.DateTimeField()
+    # The question may never have been edited
     last_edit_date = serializers.DateTimeField(required=False)
     question_id = serializers.IntegerField()
     link = serializers.CharField(max_length=500)
@@ -79,6 +81,10 @@ class StackSearchQuerySerializer(serializers.Serializer):
     # user may have deleted account, questions with this occurence do not return a user_id and will throw an error if the field presence is enforeced
     user_id = serializers.IntegerField(required=False)
     display_name = serializers.CharField(max_length=500)
+
+
+class StackSearchErrorSerializer(serializers.Serializer):
+    error = serializers.CharField(max_length=500)
 
 
 class StackCategoriesSerializer(serializers.Serializer):
