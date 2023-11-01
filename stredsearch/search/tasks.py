@@ -3,14 +3,11 @@ from datetime import datetime
 from re import search
 
 from django_rq import job
-
-from .models import *
 from search.tasksextendedfunctionality import *
 
-# logger = logging.getLogger(__name__)
+from .models import *
 
 
-    
 @job
 def insertStackQuestionsToDB(question_set:dict):
 
@@ -36,42 +33,20 @@ def insertStackQuestionsToDB(question_set:dict):
         database_question = createNewQuestionInDB(question, user, tags, search_terms)
 
 
-
-@job
-def task_execute(data:dict):
-
-    time.sleep(2)
-
-    # INSERT TASKS HERE
-
-    # logger.info(f"{name} start log...")
-
-    # try:
-    #     user = StackUser.objects.get(user_id=user_id)
-    #     user.gibberish = rand_string
-    #     user.save()
-    #     print("SUCCESS")
-    #     # logger.info("SUCCESS")
-    # except Exception as e:
-    #     print(e)
-    #     # logger.info("ERROR")
-    #     # logger.error(e)
-
-@job
-def commitStackQuestionsToDB(data:dict):
-    pass
-
 @job
 def commitRedditQuestionsToDB(data:dict):
     pass
 
 @job
-def updateStackQuestionInDB(data:dict):
-    pass
-
-@job
-def updateStackTagListInDB(data:dict):
-    pass
+def insertStackTagsToDB(data:list):
+    for tag in data:
+        if StackTags.objects.filter(tag_name=tag).count() > 0:
+            tag = StackTags.objects.get(tag_name=tag)
+            tag.number_of_instances_on_so = tag['number_of_instances_on_so']
+            number_of_cached_instances = StackQuestion.objects.filter(tags__tag_name=tag.tag_name).count()
+            tag.number_of_cached_instances = number_of_cached_instances
+            tag.save()
+        StackTags.objects.create(tag_name=tag["tag_name"], number_of_instances_on_so=tag["number_of_instances_on_so"])
 
 @job
 def updateRedditQuestionInDB(data:dict):

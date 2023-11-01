@@ -34,13 +34,15 @@ def updateQuestionParamsInDB(question):
 
     if database_instance.save():
         return True
-    
+
+
 def retrieveUserFromDB(user_id, display_name):
     if StackUser.objects.filter(user_id=user_id).count() > 0:
         return StackUser.objects.get(user_id=user_id)
     else:
         return StackUser.objects.create(user_id=user_id, display_name=display_name)
-    
+
+
 def retrieveTagsFromDB(tags:list) -> list:
 
     if not isinstance(tags, list):
@@ -53,6 +55,7 @@ def retrieveTagsFromDB(tags:list) -> list:
         else:
             tag_list.append(StackTags.objects.create(tag_name=tag))
     return tag_list
+
 
 def retrieveSearchTermFromDB(question):
 
@@ -107,6 +110,7 @@ def createStubsForMissingData(question):
         question["user_id"] = 111111111
         question["display_name"] = "N/A"
     return question
+
 
 def removeNaiveTzFromDatetime(question):
 

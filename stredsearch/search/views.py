@@ -13,8 +13,8 @@ from search.helperfunctions import processFilters
 from search.models import *
 # from search.redditquery import *
 from search.serializers import *
-from search.stackquery import queryStackOverflow
-from search.tasks import insertStackQuestionsToDB
+from search.stackquery import getTagsFromSO, queryStackOverflow
+from search.tasks import insertStackQuestionsToDB, insertStackTagsToDB
 
 
 class GetStackOverflowQuestionsByTag(APIView):
@@ -34,7 +34,6 @@ class GetStackOverflowQuestionsByTag(APIView):
         processed_filters = processFilters(params_dict)
 
         total_search_result_set = queryStackOverflow("questions", "question_by_tag", processed_filters)
-        print(total_search_result_set)
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
 
@@ -65,6 +64,9 @@ class GetStackOverflowRelatedQuestions(APIView):
 
         total_search_result_set = queryStackOverflow("questions", "related_questions", processed_filters)
 
+        task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
+        task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
+
         if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
             results = StackSearchErrorSerializer(total_search_result_set).data
         else:
@@ -90,6 +92,9 @@ class GetStackOverflowSimpleSearch(APIView):
         processed_filters = processFilters(params_dict)
 
         total_search_result_set = queryStackOverflow("search", "search", processed_filters)
+
+        task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
+        task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
 
         if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
             results = StackSearchErrorSerializer(total_search_result_set).data
@@ -128,6 +133,9 @@ class GetStackOverflowAdvancedSearch(APIView):
 
         total_search_result_set = queryStackOverflow("search", "advanced-search", processed_filters)
 
+        task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
+        task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
+
         if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
             results = StackSearchErrorSerializer(total_search_result_set).data
         else:
@@ -139,6 +147,18 @@ class GetStackOverflowAllTagsInDB(APIView):
     def get(self, request):
         tags = StackTags.objects.all()
         results = StackTagsSerializer(tags, many=True).data
+        return Response(results)
+    
+
+class GetStackOverflowTagsFromSite(APIView):
+    def get(self, request):
+        total_tag_result_set = getTagsFromSO()
+
+        task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
+        task_queue.enqueue(insertStackTagsToDB, total_tag_result_set)
+
+        results = StackTagsSerializer(total_tag_result_set, many=True).data
+
         return Response(results)
 
 class GetAllStackOverflowParams(APIView):

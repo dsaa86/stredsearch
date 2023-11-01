@@ -150,9 +150,6 @@ def getQuestionData(question:dict) -> dict:
     return question_data
 
 
-
-
-
 def extractOwnerData(question: dict, key: str) -> str:
 
     if not isinstance(question, dict):
@@ -206,78 +203,37 @@ def getQuestionDataFields() -> list:
     return [field.data_field_name for field in data_fields_from_db]
 
 
+def getTagsFromSO() -> list:
+    route_prepend = getRoutePrepend()
 
+    url = f"{route_prepend}/2.3/tags"
+    tags = []
+    for count in range(0,10):
+        params = {
+            "page": count+1,
+            "pagesize": 100,
+            "site": getRouteAppend()
+        }
 
+        try:
+            query_response = requests.get(url, params)
+        # SSLError raised typically when there is no internet connection on the client device
+        except requests.exceptions.SSLError as e:
+            return { "Error": { "SSLError": f"{ e }" } }
+        except requests.exceptions.Timeout as e:
+            return { "Error": { "Timeout": f"{ e }" } }
+        except requests.exceptions.ConnectionError as e:
+            return { "Error": { "ConnectionError": f"{ e }" } }
+        except requests.exceptions.HTTPError as e:
+            return { "Error": { "HTTPError": f"{ e }" } }
+        except requests.exceptions.TooManyRedirects as e:
+            return { "Error": { "TooManyRedirects": f"{ e }" } }
+        except requests.exceptions.RequestException as e:
+            return { "Error": { "RequestException": f"{ e }" } }
 
+        json_response = json.loads(query_response.content)
+        item_data = json_response["items"]
 
-
-# queryStackOverflow("questions", "question_by_tag", {"tagged": "python", "sort": "activity", "order": "desc", "site": "stackoverflow", "pagesize": 100, "page": 1})
-
-
-
-
-
-
-
-# def transposeKeyListForSerializer(category_list: list, key: str) -> list:
-
-#     if not isinstance(category_list, list):
-#         raise TypeError("category_list must be of type list")
-#     if not isinstance(key, str):
-#         raise TypeError("Key must be a string")
-#     if not all(isinstance(elem, str) for elem in category_list):
-#         raise TypeError("All elements in category_list must be of type string")
-
-#     transposed_list = []
-
-#     for elem in category_list:
-#         transposed_list.append({f"{key}": f"{elem}"})
-
-#     return transposed_list
-
-
-# def getQueryCategories() -> list:
-#     category_list = list(ACCESS_ROUTES.keys())
-#     category_list.pop(0)
-
-#     try:
-#         formatted_category_list = transposeKeyListForSerializer(category_list, "category")
-#     except TypeError as e:
-#         return {"error": f"Error: {e}"} 
-
-#     return formatted_category_list
-
-
-# def getQueryCategoryRoutes(category) -> list:
-#     route_list = list(ACCESS_ROUTES[category].keys())
-
-#     return transposeKeyListForSerializer(route_list, "route")
-
-
-# def processURLAndParamsToList(url, params: dict) -> list:
-
-#     params_string_for_return = ""
-
-#     for key in params.keys():
-#         print(key)
-#         params_string_for_return += key
-
-#     data_dict = {
-#         "url": url["url"],
-#         "params": params_string_for_return,
-#     }
-
-#     return [data_dict]
-
-# def getAPIParams(category, query) -> dict:
-#     return ACCESS_ROUTES[category][query]["params"]
-
-
-
-
-
-# def getDictOfPossibleFilters() -> dict:
-#     return ACCESS_ROUTES["meta"]["filters"]
-
-# def getFilters() -> dict:
-#     return ACCESS_ROUTES["meta"]["filters"]
+        for item in item_data:
+            tags.append({"tag_name" : item["name"], "number_of_instances_on_so" : item["count"]})
+    return tags

@@ -56,7 +56,7 @@ class StackUser(models.Model):
 class StackTags(models.Model):
     tag_name = models.CharField(max_length=100, blank=False)
     number_of_instances_on_so = models.IntegerField(default=0)
-    number_of_cached_instances = models.IntegerField(default=0)
+    number_of_cached_instances = models.IntegerField(default=0, blank=True)
     def __str__(self) -> str:
         return self.tag_name
 
