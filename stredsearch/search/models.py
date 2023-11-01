@@ -47,22 +47,22 @@ class StackRouteMeta(models.Model):
 
 
 class StackUser(models.Model):
-    user_id = models.IntegerField()
+    user_id = models.IntegerField(unique=True)
     display_name = models.CharField(max_length=200)
     def __str__(self) -> str:
         return self.display_name
 
 
 class StackTags(models.Model):
-    tag_name = models.CharField(max_length=100, blank=False)
-    number_of_instances_on_so = models.IntegerField(default=0)
+    tag_name = models.CharField(max_length=100, blank=False, unique=True)
+    number_of_instances_on_so = models.IntegerField(default=0, blank=True)
     number_of_cached_instances = models.IntegerField(default=0, blank=True)
     def __str__(self) -> str:
         return self.tag_name
 
 
 class StackSearchTerms(models.Model):
-    search_term = models.CharField(max_length=500, null=True)
+    search_term = models.CharField(max_length=500, null=True, unique=True)
     def __str__(self) -> str:
         return self.search_term
 

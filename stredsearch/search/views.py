@@ -4,8 +4,7 @@ import django_rq
 import html5lib
 import requests
 from django.http import Http404
-from rest_framework import generics, mixins, status
-from rest_framework.exceptions import APIException
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from search.databaseinitialisation import DatabaseInitialisation
@@ -75,7 +74,7 @@ class GetStackOverflowRelatedQuestions(APIView):
         return Response(results)
 
 class GetStackOverflowSimpleSearch(APIView):
-    def get(self, request, page, pagesize, fromdate, todate, order, min, max, sort, nottagged, tagged, intitle, format=None):
+    def get(self, request, page, pagesize, fromdate, todate, order, sort, nottagged, tagged, intitle, format=None):
         
         params_dict = {
             "page": page,
@@ -104,7 +103,7 @@ class GetStackOverflowSimpleSearch(APIView):
         return Response(results)
 
 class GetStackOverflowAdvancedSearch(APIView):
-    def get(self, request, page, pagesize, fromdate, todate, order, min, max, sort, q, accepted, answers, body, closed, migrated, notice, nottagged, tagged, title, user, url, views, wiki, format=None):
+    def get(self, request, page, pagesize, fromdate, todate, order, sort, q, accepted, answers, body, closed, migrated, notice, nottagged, tagged, title, user, url, views, wiki, format=None):
         
         params_dict = {
             "page": page,
@@ -133,6 +132,9 @@ class GetStackOverflowAdvancedSearch(APIView):
 
         total_search_result_set = queryStackOverflow("search", "advanced-search", processed_filters)
 
+        for result in total_search_result_set:
+            result['q'] = q
+
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
 
@@ -151,9 +153,8 @@ class GetStackOverflowAllTagsInDB(APIView):
     
 
 class GetStackOverflowTagsFromSite(APIView):
-    def get(self, request):
-        total_tag_result_set = getTagsFromSO()
-
+    def get(self, request, pages):
+        total_tag_result_set = getTagsFromSO(pages)
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertStackTagsToDB, total_tag_result_set)
 

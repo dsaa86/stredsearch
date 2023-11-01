@@ -203,12 +203,12 @@ def getQuestionDataFields() -> list:
     return [field.data_field_name for field in data_fields_from_db]
 
 
-def getTagsFromSO() -> list:
+def getTagsFromSO(pages:int) -> list:
     route_prepend = getRoutePrepend()
 
     url = f"{route_prepend}/2.3/tags"
     tags = []
-    for count in range(0,10):
+    for count in range(0,pages):
         params = {
             "page": count+1,
             "pagesize": 100,
@@ -232,7 +232,11 @@ def getTagsFromSO() -> list:
             return { "Error": { "RequestException": f"{ e }" } }
 
         json_response = json.loads(query_response.content)
-        item_data = json_response["items"]
+
+        try:
+            item_data = json_response["items"]
+        except Exception as e:
+            return { "error" : f"Error in SO response {e}"}
 
         for item in item_data:
             tags.append({"tag_name" : item["name"], "number_of_instances_on_so" : item["count"]})

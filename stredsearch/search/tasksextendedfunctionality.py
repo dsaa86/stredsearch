@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from re import search
 
@@ -8,7 +9,7 @@ from .models import StackQuestion, StackSearchTerms, StackTags, StackUser
 
 def updateQuestionParamsInDB(question):
     database_instance = StackQuestion.objects.get(question_id=question["question_id"])
-
+    logging.debug(f"updateQuestionParamsInDB - updating question {database_instance.question_id}")
     if database_instance.last_activity_date.tzinfo is None or database_instance.last_activity_date.tzinfo.utcoffset(database_instance.last_activity_date) is None:
         database_instance.last_activity_date = pytz.utc.localize(database_instance.last_activity_date)
 
@@ -27,7 +28,7 @@ def updateQuestionParamsInDB(question):
     database_instance.view_count = max(database_instance.view_count, question["view_count"])
     database_instance.answer_count = max(database_instance.answer_count, question["answer_count"])
     database_instance.score = max(database_instance.score, question["score"])
-
+    logging.debug("updateQuestionParamsInDB - question params updated")
     if "q" in question.keys():
         terms = [retrieveSearchTermFromDB(question)]
         database_instance.search_term.set(terms)
@@ -44,16 +45,24 @@ def retrieveUserFromDB(user_id, display_name):
 
 
 def retrieveTagsFromDB(tags:list) -> list:
-
+    logging.basicConfig(level=logging.DEBUG)
+    logging.debug("FUNCTION: retrieveTagsFromDB")
     if not isinstance(tags, list):
         raise TypeError("tags must be of type list")
-
+    logging.debug(f"retrieveTagsFromDB - tags: {tags}")
     tag_list = []
     for tag in tags:
         if StackTags.objects.filter(tag_name=tag).count() > 0:
-            tag_list.append(StackTags.objects.get(tag_name=tag))
+            if StackTags.objects.filter(tag_name=tag).count() > 1:
+                logging.debug(f"Multiple instances of tag '{tag}' found in DB")
+                logging.debug(f"{StackTags.objects.get(tag_name=tag)}")
+            existing_tag = StackTags.objects.get(tag_name=tag)
+            existing_tag.number_of_cached_instances += 1
+            existing_tag.save()
+            tag_list.append(existing_tag)
+            logging.debug(f"retrieveTagsFromDB - tag {tag} retrieved")
         else:
-            tag_list.append(StackTags.objects.create(tag_name=tag))
+            tag_list.append(StackTags.objects.get_or_create(tag_name=tag))
     return tag_list
 
 
@@ -84,7 +93,13 @@ def createNewQuestionInDB(question, user, tags, search_terms):
         title=question["title"]
     )
     database_question.search_term.set(search_terms)
-    database_question.tags.set(tags)
+    logging.debug(f"{tags}")
+    for tag in tags:
+        if type(tag) == tuple:
+            database_question.tags.add(tag[0])
+        else:
+            database_question.tags.add(tag)
+    # database_question.tags.set(tags)
     database_question.save()
     return database_question
 

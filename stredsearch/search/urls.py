@@ -22,7 +22,7 @@ urlpatterns = [
     path("stack/get/sort_methods/", views.GetStackOverflowSortMethods.as_view()),
     path("stack/get/order_methods/", views.GetStackOverflowOrderMethods.as_view()),
     path("stack/get/question_data_fields/", views.GetStackOverflowQuestionDataFields.as_view()),
-    path("stack/get/tags_from_site/", views.GetStackOverflowTagsFromSite.as_view()),
+    path("stack/get/tags_from_site/<int:pages>/", views.GetStackOverflowTagsFromSite.as_view()),
 
     # Reddit Routes
     # GET data
