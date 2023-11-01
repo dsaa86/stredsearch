@@ -14,7 +14,7 @@ from search.models import *
 # from search.redditquery import *
 from search.serializers import *
 from search.stackquery import queryStackOverflow
-from search.tasks import *
+from search.tasks import insertStackQuestionsToDB
 
 
 class GetStackOverflowQuestionsByTag(APIView):
@@ -34,9 +34,9 @@ class GetStackOverflowQuestionsByTag(APIView):
         processed_filters = processFilters(params_dict)
 
         total_search_result_set = queryStackOverflow("questions", "question_by_tag", processed_filters)
-
+        print(total_search_result_set)
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
-        task_queue.enqueue(insertQuestionsToDB, total_search_result_set)
+        task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
 
         if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
             results = StackSearchErrorSerializer(total_search_result_set).data

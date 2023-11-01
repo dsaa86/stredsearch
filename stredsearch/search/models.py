@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.db import models
 
 
@@ -53,6 +55,8 @@ class StackUser(models.Model):
 
 class StackTags(models.Model):
     tag_name = models.CharField(max_length=100, blank=False)
+    number_of_instances_on_so = models.IntegerField(default=0)
+    number_of_cached_instances = models.IntegerField(default=0)
     def __str__(self) -> str:
         return self.tag_name
 
@@ -70,8 +74,6 @@ class StredSearchQuestion(models.Model):
     link = models.CharField(max_length=200)
     title = models.CharField(max_length=200)
     times_returned_as_search_result = models.IntegerField(default=0)
-    def getTitle(self):
-        return self.title
 
 
 class StackQuestion(StredSearchQuestion):
@@ -86,7 +88,7 @@ class StackQuestion(StredSearchQuestion):
     question_id = models.IntegerField()
     tags = models.ManyToManyField(StackTags, blank=True)
     def __str__(self) -> str:
-        return super.getTitle(self)
+        return self.question_id
     
 
 class RedditQuestion(StredSearchQuestion):
