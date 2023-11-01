@@ -35,10 +35,8 @@ class GetStackOverflowQuestionsByTag(APIView):
 
         total_search_result_set = queryStackOverflow("questions", "question_by_tag", processed_filters)
 
-        for result in total_search_result_set:
-            print(result)
-            print()
-            print()
+        task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
+        task_queue.enqueue(insertQuestionsToDB, total_search_result_set)
 
         if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
             results = StackSearchErrorSerializer(total_search_result_set).data
