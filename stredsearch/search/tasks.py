@@ -4,8 +4,8 @@ from os import link
 from re import search
 
 from django_rq import job
-from search.tasksextendedfunctionality import *
 from search.exceptionhandlers import UnsuccessfulDBSave
+from search.tasksextendedfunctionality import *
 
 from .models import *
 
@@ -48,35 +48,7 @@ def insertStackTagsToDB(data:list):
         else:
             StackTags.objects.get_or_create(tag_name=tag["tag_name"], number_of_instances_on_so=tag["number_of_instances_on_so"])
 
-def createOrUpdateRedditQuestion(link:str, title:str, db_search_term) -> bool:
-    db_question_instance = None
-    if RedditQuestion.objects.filter(link=link).exists():
-        db_question_instance = RedditQuestion.objects.get(link=link)
-        db_question_instance.times_returned_as_search_result += 1
-    else:
-        db_question_instance = RedditQuestion.objects.create(link=link, title=title, times_returned_as_search_result=1)
-        db_question_instance.search_term.add(db_search_term)
-    try:
-        db_question_instance.save()
-        return True
-    except Exception as e:
-        return False
 
-def addSearchTypeToRedditQuestion(type_set: list, link: str) -> bool:
-    for search_type in type_set:
-        db_question_instance = RedditQuestion.objects.filter(link=link)
-        db_type = None
-        if RedditSearchType.objects.filter(search_type=search_type).exists():
-            db_type = RedditSearchType.objects.get(search_type=search_type)
-        else:
-            db_type = RedditSearchType.objects.create(search_type=search_type)
-
-        db_question_instance.search_type.add(db_type)
-        try:
-            db_question_instance.save()
-        except Exception as e:
-            return False
-    return True
 
 @job
 def insertRedditQuestionToDB(data:dict) -> bool:
