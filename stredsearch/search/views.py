@@ -238,10 +238,7 @@ class GetRedditData(APIView):
 
         total_search_result_set = searchRedditAndReturnResponse(search_terms, subred_list)
 
-        
-
         task_data_set = {"search_term":q, "search_type_set" : search_type, "question_set" : total_search_result_set}
-
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertRedditQuestionToDB, task_data_set)
 
