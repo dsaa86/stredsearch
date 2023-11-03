@@ -28,7 +28,7 @@ urlpatterns = [
     # GET data
     # path("reddit/get/sub_reddits/", views.GetSubReddits.as_view()),
     # path("reddit/get/query_types", views.GetRedditQueryTypes.as_view()),
-    # path("reddit/get/query/<str:query_type>/<str:sub_reddit>/<str:query>/<int:limit>/", views.GetRedditQuery.as_view()),
+    path("reddit/get/query/<str:search_type>/<str:subred>/<str:q>/<str:limit>/", views.GetRedditData.as_view()),
 
     # Meta Routes
     path("meta/initialisedb/", views.InitialiseDatabase.as_view()),

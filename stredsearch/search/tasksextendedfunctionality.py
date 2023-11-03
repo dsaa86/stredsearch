@@ -4,7 +4,7 @@ from re import search
 
 import pytz
 
-from .models import StackQuestion, StackSearchTerms, StackTags, StackUser
+from .models import StackQuestion, SearchTerms, StackTags, StackUser
 
 
 def updateQuestionParamsInDB(question):
@@ -67,18 +67,17 @@ def retrieveTagsFromDB(tags:list) -> list:
 
 
 def retrieveSearchTermFromDB(question):
-
     if "q" in question.keys():
-        if StackSearchTerms.objects.filter(search_term=question["q"]).count() > 0:
-            return StackSearchTerms.objects.get(search_term=question["q"])
-        return StackSearchTerms.objects.create(search_term=question["q"])
+        if SearchTerms.objects.filter(search_term=question["q"]).count() > 0:
+            return SearchTerms.objects.get(search_term=question["q"])
+        return SearchTerms.objects.create(search_term=question["q"])
     
-    if StackSearchTerms.objects.filter(search_term="N/A").count() > 0:
-        return StackSearchTerms.objects.get(search_term="N/A")
-    return StackSearchTerms.objects.create(search_term="N/A")
+    if SearchTerms.objects.filter(search_term="N/A").count() > 0:
+        return SearchTerms.objects.get(search_term="N/A")
+    return SearchTerms.objects.create(search_term="N/A")
 
 
-def createNewQuestionInDB(question, user, tags, search_terms):
+def createNewStackQuestionInDB(question, user, tags, search_terms):
     database_question = StackQuestion.objects.create(
         owner=user,
         is_answered=question["is_answered"],

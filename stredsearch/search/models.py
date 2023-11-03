@@ -61,7 +61,7 @@ class StackTags(models.Model):
         return self.tag_name
 
 
-class StackSearchTerms(models.Model):
+class SearchTerms(models.Model):
     search_term = models.CharField(max_length=500, null=True, unique=True)
     def __str__(self) -> str:
         return self.search_term
@@ -70,7 +70,7 @@ class StackSearchTerms(models.Model):
 class StredSearchQuestion(models.Model):
     created_on_stredsearch = models.DateTimeField(auto_now_add=True)
     updated_on_stredsearch = models.DateTimeField(auto_now=True)
-    search_term = models.ManyToManyField(StackSearchTerms)
+    search_term = models.ManyToManyField(SearchTerms)
     link = models.CharField(max_length=200)
     title = models.CharField(max_length=200)
     times_returned_as_search_result = models.IntegerField(default=0)
@@ -91,5 +91,14 @@ class StackQuestion(StredSearchQuestion):
         return self.question_id
     
 
+class RedditSearchType(models.Model):
+    search_type = models.CharField(max_length=10, blank=False, unique=True)
+    def __str__(self) -> str:
+        return self.type
+    
+
 class RedditQuestion(StredSearchQuestion):
-    type = models.CharField(max_length=10)
+    search_type = models.ManyToManyField(RedditSearchType, blank=True)
+
+
+
