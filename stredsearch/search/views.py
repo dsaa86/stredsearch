@@ -232,11 +232,9 @@ class GetRedditData(APIView):
 
         # subred = '/r/{subredname}'
 
-        search_terms = buildTermsFromParams(q, search_type, limit)
 
-        subred_list = buildSubredFromParams(subred)
 
-        total_search_result_set = searchRedditAndReturnResponse(search_terms, subred_list)
+        total_search_result_set = searchRedditAndReturnResponse(q, search_type, limit, subred)
 
         task_data_set = {"search_term":q, "search_type_set" : search_type, "question_set" : total_search_result_set}
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)

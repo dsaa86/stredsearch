@@ -4,7 +4,8 @@ from re import search
 
 import pytz
 
-from .models import SearchTerms, StackQuestion, StackTags, StackUser
+from .models import (RedditQuestion, RedditSearchType, SearchTerms,
+                     StackQuestion, StackTags, StackUser)
 
 
 def updateQuestionParamsInDB(question):
