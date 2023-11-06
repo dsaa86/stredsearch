@@ -146,6 +146,6 @@ def searchRedditAndReturnResponse(q: str, search_type: str, limit: str, subreddi
 
         search_links = parseLinksFromHtml(html)
         
-        total_result_set= total_result_set + search_links
+        total_result_set.extend(search_links)
 
     return total_result_set
