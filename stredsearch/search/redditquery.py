@@ -114,7 +114,11 @@ def getRedditHTMLViaSelenium(url: str) -> str:
     except TimeOutException:
         print("TimeoutException: Failed to load page")
 
-    return driver.page_source
+    page_source = driver.page_source
+
+    driver.quit()
+
+    return page_source
 
 
 def searchRedditAndReturnResponse(q: str, search_type: str, limit: str, subreddits: str) -> dict:
