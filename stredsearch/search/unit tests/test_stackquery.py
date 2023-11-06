@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 import unittest
@@ -306,3 +307,187 @@ class TestStackQuery(TestCase):
 
         # Assert that the function returned the expected result
         self.assertEqual(result, ['tags', 'user_id'])
+
+
+    def test_getOnlyQuestionsFromStackOverflowResponse_valid_input(self):
+        # Call the function with valid input
+        result = getOnlyQuestionsFromStackOverflowResponse({'items': ['question1', 'question2']})
+
+        # Assert that the function returned the expected result
+        self.assertEqual(result, ['question1', 'question2'])
+
+    def test_getOnlyQuestionsFromStackOverflowResponse_invalid_input_type(self):
+        # Call the function with invalid input type and assert that it raises a TypeError
+        with self.assertRaises(TypeError):
+            getOnlyQuestionsFromStackOverflowResponse('invalid input type')
+
+    def test_getOnlyQuestionsFromStackOverflowResponse_missing_items_key(self):
+        # Call the function with missing 'items' key and assert that it raises a ValueError
+        with self.assertRaises(ValueError):
+            getOnlyQuestionsFromStackOverflowResponse({'invalid_key': 'value'})
+
+    def test_getOnlyQuestionsFromStackOverflowResponse_empty_items_key(self):
+        # Call the function with empty 'items' key and assert that it raises a ValueError
+        with self.assertRaises(ValueError):
+            getOnlyQuestionsFromStackOverflowResponse({'items': []})
+
+
+    def test_getQuestionData_valid_input(self):
+        # Call the function with valid input
+        question = {
+            "tags": ["python", "django"],
+            "owner": {
+                "user_id": 123456,
+                "display_name": "test_user"
+            }
+        }
+        result = getQuestionData(question)
+
+        # Assert that the function returned the expected result
+        expected_result = {
+            "tags": "python, django",
+            "user_id": 123456,
+            "display_name": "test_user"
+        }
+        self.assertEqual(result, expected_result)
+
+    def test_getQuestionData_invalid_input_type(self):
+        # Call the function with invalid input type and assert that it raises a TypeError
+        with self.assertRaises(TypeError):
+            getQuestionData("invalid input type")
+
+    def test_getQuestionData_missing_tags_key(self):
+        # Call the function with missing 'tags' key and assert that it raises a ValueError
+        question = {
+            "owner": {
+                "user_id": 123456,
+                "display_name": "test_user"
+            }
+        }
+        with self.assertRaises(ValueError):
+            getQuestionData(question)
+
+    def test_getQuestionData_missing_owner_key(self):
+        # Call the function with missing 'owner' key and assert that it raises a ValueError
+        question = {
+            "tags": ["python", "django"]
+        }
+        with self.assertRaises(ValueError):
+            getQuestionData(question)
+
+
+    def test_extractOwnerData_valid_input(self):
+        # Call the function with valid input
+        question = {
+            "owner": {
+                "user_id": 123456,
+                "display_name": "test_user"
+            }
+        }
+        result_user_id = extractOwnerData(question, "user_id")
+        result_display_name = extractOwnerData(question, "display_name")
+
+        # Assert that the function returned the expected result
+        self.assertEqual(result_user_id, 123456)
+        self.assertEqual(result_display_name, "test_user")
+
+    def test_extractOwnerData_invalid_input_type(self):
+        # Call the function with invalid input type and assert that it raises a TypeError
+        with self.assertRaises(TypeError):
+            extractOwnerData("invalid input type", "user_id")
+
+    def test_extractOwnerData_missing_owner_key(self):
+        # Call the function with missing 'owner' key and assert that it raises a ValueError
+        question = {
+            "tags": ["python", "django"]
+        }
+        with self.assertRaises(ValueError):
+            extractOwnerData(question, "user_id")
+
+    def test_extractOwnerData_invalid_user_id_key(self):
+        # Call the function with invalid 'user_id' key and assert that it raises an InvalidUserIdKey exception
+        question = {
+            "owner": {
+                "display_name": "test_user"
+            }
+        }
+        with self.assertRaises(InvalidUserIdKey):
+            extractOwnerData(question, "user_id")
+
+    def test_extractOwnerData_invalid_display_name_key(self):
+        # Call the function with invalid 'display_name' key and assert that it raises an InvalidDisplayNameKey exception
+        question = {
+            "owner": {
+                "user_id": 123456
+            }
+        }
+        with self.assertRaises(InvalidDisplayNameKey):
+            extractOwnerData(question, "display_name")
+
+
+    @patch('search.stackquery.getQuestionDataFields')
+    def test_extractRelevantQuestionDataFieldsForQuestion_valid_input(self, mock_getQuestionDataFields):
+        # Set up the mock to return a specific result
+        mock_getQuestionDataFields.return_value = ["title", "creation_date", "last_activity_date", "last_edit_date"]
+
+        # Call the function with valid input
+        question = {
+            "title": "Test title",
+            "creation_date": 1633048641,
+            "last_activity_date": 1633048641,
+            "last_edit_date": 1633048641,
+            "other_field": "Not relevant"
+        }
+        result = extractRelevantQuestionDataFieldsForQuestion(question)
+
+        # Assert that the function returned the expected result
+        expected_result = {
+            "title": "Test title",
+            "creation_date": datetime(2021, 10, 1, 4, 37, 21),
+            "last_activity_date": datetime(2021, 10, 1, 4, 37, 21),
+            "last_edit_date": datetime(2021, 10, 1, 4, 37, 21)
+        }
+        self.assertEqual(result, expected_result)
+
+
+    def test_extractRelevantQuestionDataFieldsForQuestion_invalid_input_type(self):
+        # Call the function with invalid input type and assert that it raises a TypeError
+        with self.assertRaises(TypeError):
+            extractRelevantQuestionDataFieldsForQuestion("invalid input type")
+
+    def test_extractRelevantQuestionDataFieldsForQuestion_missing_relevant_fields(self):
+        # Call the function with missing relevant fields and assert that it returns an empty dictionary
+        question = {
+            "other_field": "Not relevant"
+        }
+        result = extractRelevantQuestionDataFieldsForQuestion(question)
+        self.assertEqual(result, {})
+
+    @patch('search.stackquery.getQuestionDataFields')
+    def test_extractRelevantQuestionDataFieldsForQuestion_invalid_timestamp(self, mock_getQuestionDataFields):
+
+        mock_getQuestionDataFields.return_value = ["title", "creation_date", "last_activity_date", "last_edit_date"]
+        # Call the function with invalid timestamp and assert that it returns an error dictionary
+        question = {
+            "creation_date": "invalid timestamp"
+        }
+        result = extractRelevantQuestionDataFieldsForQuestion(question)
+        self.assertEqual(result, {'error': {'TypeError': 'ms_value must be of type int'}})
+
+
+    @patch('stackquery.StackQuestionDataFields.objects.all')
+    def test_getQuestionDataFields(self, mock_objects_all):
+        # Set up the mock to return a specific result
+        mock_objects_all.return_value = [
+            MagicMock(data_field_name='title'),
+            MagicMock(data_field_name='creation_date'),
+            MagicMock(data_field_name='last_activity_date'),
+            MagicMock(data_field_name='last_edit_date'),
+        ]
+
+        # Call the function
+        result = getQuestionDataFields()
+
+        # Assert that the function returned the expected result
+        expected_result = ['title', 'creation_date', 'last_activity_date', 'last_edit_date']
+        self.assertEqual(result, expected_result)
