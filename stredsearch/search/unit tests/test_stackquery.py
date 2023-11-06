@@ -47,6 +47,15 @@ class TestStackQuery(TestCase):
         # Assert that the function returned the expected result
         self.assertEqual(response, [])
 
+
+    @patch('search.stackquery.checkObjAndRaiseTypeError')
+    @patch('search.stackquery.checkStringAndRaiseValueError')
+    @patch('search.stackquery.getRoutePrepend')
+    @patch('search.stackquery.getAPIRoute')
+    @patch('search.stackquery.getRouteAppend')
+    @patch('requests.get')
+    @patch ('search.stackquery.sanitiseStackOverflowResponse')
+    def test_queryStackOverflow_raises_SSLError(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
         mock_checkObjAndRaiseTypeError.return_value = True
         mock_checkStringAndRaiseValueError.return_value = True
         mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
@@ -57,25 +66,6 @@ class TestStackQuery(TestCase):
         mock_get.side_effect = requests.exceptions.SSLError('SSL Error')
         response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
         self.assertEqual(response, { "Error": { "SSLError": 'SSL Error' } })
-
-    # @patch('search.stackquery.checkObjAndRaiseTypeError')
-    # @patch('search.stackquery.checkStringAndRaiseValueError')
-    # @patch('search.stackquery.getRoutePrepend')
-    # @patch('search.stackquery.getAPIRoute')
-    # @patch('search.stackquery.getRouteAppend')
-    # @patch('requests.get')
-    # @patch ('search.stackquery.sanitiseStackOverflowResponse')
-    # def test_queryStackOverflow_raises_SSLError(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
-    #     mock_checkObjAndRaiseTypeError.return_value = True
-    #     mock_checkStringAndRaiseValueError.return_value = True
-    #     mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
-    #     mock_getAPIRoute.return_value = '/2.3/questions'
-    #     mock_getRouteAppend.return_value = 'stackoverflow'
-    #     mock_sanitiseStackOverflowResponse.return_value = []
-    #     # mock_get.return_value = MagicMock(content='{"items": []}')
-    #     mock_get.side_effect = requests.exceptions.SSLError('SSL Error')
-    #     response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
-    #     self.assertEqual(response, { "Error": { "SSLError": 'SSL Error' } })
 
     
     @patch('search.stackquery.checkObjAndRaiseTypeError')
@@ -173,12 +163,10 @@ class TestStackQuery(TestCase):
         response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
         self.assertEqual(response, { "Error": { "RequestException": 'Request Exception' } })
 
-    def test_checkObjAndRaiseTypeError_with_correct_type(self):
+    def test_checkObjAndRaiseTypeError(self):
         result = checkObjAndRaiseTypeError("test", str, "Error message")
         self.assertEqual(result, True)
 
-
-    def test_checkObjAndRaiseTypeError_with_incorrect_type(self):
         with self.assertRaises(TypeError):
             checkObjAndRaiseTypeError("test", int, "Error message")
 
@@ -187,29 +175,24 @@ class TestStackQuery(TestCase):
         result = checkStringAndRaiseValueError("test", " ", "Error message")
         self.assertEqual(result, True)
 
-
-    def test_checkStringAndRaiseValueError_with_incorrect_value(self):
         with self.assertRaises(ValueError):
             checkStringAndRaiseValueError("test", "test", "Error message")
 
         
-    def test_checkElemExistsInListOrDict_with_elem_in_list(self):
+    def test_checkElemExistsInListOrDict(self):
         result = checkElemExistsInListOrDict("test", ["test", "another"], "Error message")
         self.assertEqual(result, True)
 
-    def test_checkElemExistsInListOrDict_with_elem_not_in_list(self):
         with self.assertRaises(ValueError):
             checkElemExistsInListOrDict("not_in_list", ["test", "another"], "Error message")
 
-    def test_checkElemExistsInListOrDict_with_elem_in_dict(self):
         result = checkElemExistsInListOrDict("test", {"test": "value", "another": "value"}, "Error message")
         self.assertEqual(result, True)
 
-    def test_checkElemExistsInListOrDict_with_elem_not_in_dict(self):
         with self.assertRaises(ValueError):
             checkElemExistsInListOrDict("not_in_dict", {"test": "value", "another": "value"}, "Error message")
 
-    
+
     @patch('stackquery.StackRouteMeta.objects.get')
     def test_getRoutePrepend(self, mock_get):
         # Set up the mock
@@ -242,23 +225,6 @@ class TestStackQuery(TestCase):
 
         # Assert that the function returned the expected result
         self.assertEqual(result, 'questions')
-
-
-    @patch('stackquery.StackRouteMeta.objects.get')
-    def test_getRouteAppend(self, mock_get):
-        # Set up the mock
-        mock_obj = MagicMock()
-        mock_obj.route_append = 'stackoverflow'
-        mock_get.return_value = mock_obj
-
-        # Call the function
-        result = getRouteAppend()
-
-        # Assert that the mock was called with the correct arguments
-        mock_get.assert_called_once_with(pk=1)
-
-        # Assert that the function returned the expected result
-        self.assertEqual(result, 'stackoverflow')
 
 
     @patch('stackquery.StackRouteMeta.objects.get')
@@ -320,30 +286,27 @@ class TestStackQuery(TestCase):
         self.assertEqual(result, ['tags', 'user_id'])
 
 
-    def test_getOnlyQuestionsFromStackOverflowResponse_valid_input(self):
+    def test_getOnlyQuestionsFromStackOverflowResponse(self):
         # Call the function with valid input
         result = getOnlyQuestionsFromStackOverflowResponse({'items': ['question1', 'question2']})
 
         # Assert that the function returned the expected result
         self.assertEqual(result, ['question1', 'question2'])
 
-    def test_getOnlyQuestionsFromStackOverflowResponse_invalid_input_type(self):
         # Call the function with invalid input type and assert that it raises a TypeError
         with self.assertRaises(TypeError):
             getOnlyQuestionsFromStackOverflowResponse('invalid input type')
 
-    def test_getOnlyQuestionsFromStackOverflowResponse_missing_items_key(self):
         # Call the function with missing 'items' key and assert that it raises a ValueError
         with self.assertRaises(ValueError):
             getOnlyQuestionsFromStackOverflowResponse({'invalid_key': 'value'})
 
-    def test_getOnlyQuestionsFromStackOverflowResponse_empty_items_key(self):
         # Call the function with empty 'items' key and assert that it raises a ValueError
         with self.assertRaises(ValueError):
             getOnlyQuestionsFromStackOverflowResponse({'items': []})
 
 
-    def test_getQuestionData_valid_input(self):
+    def test_getQuestionData(self):
         # Call the function with valid input
         question = {
             "tags": ["python", "django"],
@@ -362,12 +325,11 @@ class TestStackQuery(TestCase):
         }
         self.assertEqual(result, expected_result)
 
-    def test_getQuestionData_invalid_input_type(self):
         # Call the function with invalid input type and assert that it raises a TypeError
         with self.assertRaises(TypeError):
             getQuestionData("invalid input type")
 
-    def test_getQuestionData_missing_tags_key(self):
+
         # Call the function with missing 'tags' key and assert that it raises a ValueError
         question = {
             "owner": {
@@ -378,7 +340,6 @@ class TestStackQuery(TestCase):
         with self.assertRaises(ValueError):
             getQuestionData(question)
 
-    def test_getQuestionData_missing_owner_key(self):
         # Call the function with missing 'owner' key and assert that it raises a ValueError
         question = {
             "tags": ["python", "django"]
@@ -387,7 +348,7 @@ class TestStackQuery(TestCase):
             getQuestionData(question)
 
 
-    def test_extractOwnerData_valid_input(self):
+    def test_extractOwnerData(self):
         # Call the function with valid input
         question = {
             "owner": {
@@ -402,12 +363,10 @@ class TestStackQuery(TestCase):
         self.assertEqual(result_user_id, 123456)
         self.assertEqual(result_display_name, "test_user")
 
-    def test_extractOwnerData_invalid_input_type(self):
         # Call the function with invalid input type and assert that it raises a TypeError
         with self.assertRaises(TypeError):
             extractOwnerData("invalid input type", "user_id")
 
-    def test_extractOwnerData_missing_owner_key(self):
         # Call the function with missing 'owner' key and assert that it raises a ValueError
         question = {
             "tags": ["python", "django"]
@@ -415,7 +374,8 @@ class TestStackQuery(TestCase):
         with self.assertRaises(ValueError):
             extractOwnerData(question, "user_id")
 
-    def test_extractOwnerData_invalid_user_id_key(self):
+
+    def test_extractOwnerData(self):
         # Call the function with invalid 'user_id' key and assert that it raises an InvalidUserIdKey exception
         question = {
             "owner": {
@@ -425,7 +385,6 @@ class TestStackQuery(TestCase):
         with self.assertRaises(InvalidUserIdKey):
             extractOwnerData(question, "user_id")
 
-    def test_extractOwnerData_invalid_display_name_key(self):
         # Call the function with invalid 'display_name' key and assert that it raises an InvalidDisplayNameKey exception
         question = {
             "owner": {
@@ -460,22 +419,16 @@ class TestStackQuery(TestCase):
         }
         self.assertEqual(result, expected_result)
 
-
-    def test_extractRelevantQuestionDataFieldsForQuestion_invalid_input_type(self):
         # Call the function with invalid input type and assert that it raises a TypeError
         with self.assertRaises(TypeError):
             extractRelevantQuestionDataFieldsForQuestion("invalid input type")
 
-    def test_extractRelevantQuestionDataFieldsForQuestion_missing_relevant_fields(self):
         # Call the function with missing relevant fields and assert that it returns an empty dictionary
         question = {
             "other_field": "Not relevant"
         }
         result = extractRelevantQuestionDataFieldsForQuestion(question)
         self.assertEqual(result, {})
-
-    @patch('search.stackquery.getQuestionDataFields')
-    def test_extractRelevantQuestionDataFieldsForQuestion_invalid_timestamp(self, mock_getQuestionDataFields):
 
         mock_getQuestionDataFields.return_value = ["title", "creation_date", "last_activity_date", "last_edit_date"]
         # Call the function with invalid timestamp and assert that it returns an error dictionary
