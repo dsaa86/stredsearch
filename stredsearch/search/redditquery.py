@@ -104,7 +104,7 @@ def getRedditHTMLViaSelenium(url: str) -> str:
     checkStringAndRaiseValueError(url, " ", "url must not be whitespace")
 
     options = Options()
-    options.add_argument("--headless=new")
+    options.add_argument("--headless")
     
     driver = webdriver.Chrome(options = options)
     driver.get(url)
