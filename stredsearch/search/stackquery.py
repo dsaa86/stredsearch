@@ -1,4 +1,5 @@
 import json
+from typing import Union
 
 import requests
 from search.exceptionhandlers import InvalidDisplayNameKey, InvalidUserIdKey
@@ -6,7 +7,34 @@ from search.helperfunctions import convertListToString, convertMSToDateTime
 from search.models import StackQuestionDataFields, StackRoute, StackRouteMeta
 
 
-def queryStackOverflow(category, query, filters) -> dict:
+# MyPy is installed and has been run against this code - technically error checking in this way is unnecessary. As this isn't performance-optimised code, it doesn't hurt to include a belt-and-braces check.
+def checkObjAndRaiseTypeError(test_obj: object, test_type, error_msg: str):
+    if not isinstance(test_obj, test_type):
+        raise TypeError(error_msg)
+
+
+def checkStringAndRaiseValueError(test_string: str, test_value: str, error_msg: str):
+    if test_string == test_value:
+        raise ValueError(error_msg)
+    
+def checkElemExistsInListOrDict(elem: str, list_or_dict: Union[list, dict], error_msg: str):
+    if elem not in list_or_dict:
+        raise ValueError(error_msg)
+
+
+def queryStackOverflow(category:str, query:str, filters:dict) -> dict:
+
+    checkObjAndRaiseTypeError(category, str, "category must be of type str")
+    checkObjAndRaiseTypeError(query, str, "query must be of type str")
+    checkObjAndRaiseTypeError(filters, dict, "filters must be of type dict")
+
+
+    # removes leading and trailing whitespace...means only one ValueError check needs to be performed that covers both "" and " "
+    category = category.strip(' ')
+    query = query.strip(' ')
+    checkStringAndRaiseValueError(category, '', "category must not be empty string")
+    checkStringAndRaiseValueError(query, '', "query must not be empty string")
+
     route_prepend = getRoutePrepend()
     query_route = getAPIRoute(category, query)
 
@@ -20,9 +48,9 @@ def queryStackOverflow(category, query, filters) -> dict:
     params["site"] = getRouteAppend()
     # params["site"] = "stackoverflow"
 
+    # An unconventional way of handling errors, but it ensures that the Django view always receives a dict response - this can then be parsed to decide if the response is an error or a valid set of SO data.
     try:
         query_response = requests.get(url, params)
-        print(query_response)
     # SSLError raised typically when there is no internet connection on the client device
     except requests.exceptions.SSLError as e:
         return { "Error": { "SSLError": f"{ e }" } }
@@ -47,15 +75,28 @@ def getRoutePrepend() -> str:
     return prepend.route_prepend
 
 
-def getAPIRoute(category, query) -> str:
+def getAPIRoute(category:str, query:str) -> str:
+
+    checkObjAndRaiseTypeError(category, str, "category must be of type str")
+    checkObjAndRaiseTypeError(query, str, "query must be of type str")
+
+    category = category.strip(' ')
+    query = query.strip(' ')
+    checkStringAndRaiseValueError(category, '', "category must not be empty string")
+    checkStringAndRaiseValueError(query, '', "query must not be empty string")
+
     return StackRoute.objects.filter(route_category=category, route_query=query).first().route
 
 
 def insertQuestionIdsToQueryRoute(query_route: str, ids: str) -> str:
-    if not isinstance(query_route, str):
-        raise TypeError("query_route must be of type str")
-    if not isinstance(ids, str):
-        raise TypeError("ids must be of type str")
+
+    checkObjAndRaiseTypeError(query_route, str, "query_route must be of type str")
+    checkObjAndRaiseTypeError(ids, str, "ids must be of type str")
+
+    query_route = query_route.strip(' ')
+    ids = ids.strip(' ')
+    checkStringAndRaiseValueError(query_route, '', "query_route must not be empty string")
+    checkStringAndRaiseValueError(ids, '', "ids must not be empty string")
 
     return query_route.replace("{question_ids}", ids)
 
@@ -66,8 +107,7 @@ def getRouteAppend() -> str:
 
 def sanitiseStackOverflowResponse(json_response):
 
-    if not isinstance(json_response, dict):
-        raise TypeError("json_response must be of type json")
+    checkObjAndRaiseTypeError(json_response, dict, "json_response must be of type dict")
 
     # full data set contains additional meta data that is unnecessary. This call strips away that meta data.
     try:
@@ -88,10 +128,9 @@ def sanitiseStackOverflowResponse(json_response):
 
 def getOnlyQuestionsFromStackOverflowResponse(json_response: dict) -> dict:
 
-    if not isinstance(json_response, dict):
-        raise TypeError("json_response must be of type json")
-    if "items" not in json_response.keys():
-        raise KeyError("json_response must contain a key named 'items'")
+    checkObjAndRaiseTypeError(json_response, dict, "json_response must be of type dict")
+    checkElemExistsInListOrDict("items", json_response.keys(), "json_response must contain a key named 'items'")
+
     if not json_response["items"]:
         raise ValueError("json_response must contain a non-empty 'items' key")
 
@@ -100,16 +139,11 @@ def getOnlyQuestionsFromStackOverflowResponse(json_response: dict) -> dict:
 
 def getQuestionData(question:dict) -> dict:
 
-    if not isinstance(question, dict):
-        raise TypeError("question must be of type dict")
-    if "tags" not in question.keys():
-        raise KeyError("question must contain a key named 'tags'")
-    if "owner" not in question.keys():
-        raise KeyError("question must contain a key named 'owner'")
-    if not isinstance(question["tags"], list):
-        raise TypeError("question['tags'] must be of type list")
-    if not isinstance(question["owner"], dict):
-        raise TypeError("question['owner'] must be of type dict")
+    checkObjAndRaiseTypeError(question, dict, "question must be of type dict")
+    checkElemExistsInListOrDict("tags", question.keys(), "question must contain a key named 'tags'")
+    checkElemExistsInListOrDict("owner", question.keys(), "question must contain a key named 'owner'")
+    checkObjAndRaiseTypeError(question["tags"], list, "question['tags'] must be of type list")
+    checkObjAndRaiseTypeError(question["owner"], dict, "question['owner'] must be of type dict")
 
     question_data = {}
 
@@ -152,14 +186,11 @@ def getQuestionData(question:dict) -> dict:
 
 def extractOwnerData(question: dict, key: str) -> str:
 
-    if not isinstance(question, dict):
-        raise TypeError("question must be of type dict")
-    if not isinstance(key, str):
-        raise TypeError("key must be of type str")
-    if "owner" not in question.keys():
-        raise KeyError("question must contain a key named 'owner'")
-    if not isinstance(question["owner"], dict):
-        raise TypeError("question['owner'] must be of type dict")
+    checkObjAndRaiseTypeError(question, dict, "question must be of type dict")
+    checkObjAndRaiseTypeError(key, str, "key must be of type str")
+    checkElemExistsInListOrDict("owner", question.keys(), "question must contain a key named 'owner'")
+    checkObjAndRaiseTypeError(question["owner"], dict, "question['owner'] must be of type dict")
+
     if key not in question["owner"].keys() and key == "user_id":
         raise InvalidUserIdKey()
     if key not in question["owner"].keys() and key == "display_name":
@@ -168,8 +199,8 @@ def extractOwnerData(question: dict, key: str) -> str:
         raise TypeError(f"question['owner']['{key}'] must be of type int")
     if key == 'display_name' and not isinstance(question["owner"][key], str):
         raise TypeError(f"question['owner']['{key}'] must be of type str")
-    if key not in ["user_id", "display_name"]:
-        raise ValueError("key must be one of the following: 'user_id', 'display_name'")
+    
+    checkElemExistsInListOrDict(key, ["user_id", "display_name"], "key must be one of the following: 'user_id', 'display_name'")
 
     for owner_data_key, owner_data_value in question["owner"].items():
         if owner_data_key == "user_id" and key == "user_id":
@@ -180,8 +211,7 @@ def extractOwnerData(question: dict, key: str) -> str:
 
 def extractRelevantQuestionDataFieldsForQuestion(question: dict) -> dict:
 
-    if not isinstance(question, dict):
-        raise TypeError("question must be of type dict")
+    checkObjAndRaiseTypeError(question, dict, "question must be of type dict")
 
     all_possible_question_data_fields = getQuestionDataFields()
     matched_data_fields = {}
@@ -204,6 +234,9 @@ def getQuestionDataFields() -> list:
 
 
 def getTagsFromSO(pages:int) -> list:
+
+    checkObjAndRaiseTypeError(pages, int, "pages must be of type int")
+
     route_prepend = getRoutePrepend()
 
     url = f"{route_prepend}/2.3/tags"
