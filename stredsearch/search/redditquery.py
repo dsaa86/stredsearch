@@ -28,9 +28,9 @@ def buildTermsFromParams(q: str, search_type: str, limit: str) -> dict:
     checkObjAndRaiseTypeError(limit, str, "limit must be of type str")
 
     return {
-        "q": f"{q}",
-        "type": f"{search_type}",
-        "limit": f"{limit}",
+        "q": q,
+        "type": search_type,
+        "limit": limit,
     }
 
 
