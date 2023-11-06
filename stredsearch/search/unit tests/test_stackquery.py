@@ -396,7 +396,7 @@ class TestStackQuery(TestCase):
 
 
     @patch('search.stackquery.getQuestionDataFields')
-    def test_extractRelevantQuestionDataFieldsForQuestion_valid_input(self, mock_getQuestionDataFields):
+    def test_extractRelevantQuestionDataFieldsForQuestion(self, mock_getQuestionDataFields):
         # Set up the mock to return a specific result
         mock_getQuestionDataFields.return_value = ["title", "creation_date", "last_activity_date", "last_edit_date"]
 
