@@ -1,16 +1,16 @@
-import time
-from tabnanny import check
-
 from bs4 import BeautifulSoup
+from django.http import JsonResponse
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service as ChromeService
+# from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+# from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
+# MyPy is installed and has been run against this code - technically error checking in this way is unnecessary. As this isn't performance-optimised code, it doesn't hurt to include a belt-and-braces check.
 def checkObjAndRaiseTypeError(test_obj: object, test_type, error_msg: str):
     if not isinstance(test_obj, test_type):
         raise TypeError(error_msg)
@@ -55,13 +55,10 @@ def buildUrl(terms: dict, subreddit: str = '') -> str:
     checkStringAndRaiseValueError(terms["q"], '', "terms must contain a q parameter that is not empty string")
     checkStringAndRaiseValueError(terms["type"], '', "terms must contain a type parameter that is not empty string")
     checkStringAndRaiseValueError(terms["limit"], '', "terms must contain a limit parameter that is not empty string")
-    checkStringAndRaiseValueError(terms["q"], None, "terms must contain a q parameter that is not of type None")
-    checkStringAndRaiseValueError(terms["type"], None, "terms must contain a type parameter that is not of type None")
-    checkStringAndRaiseValueError(terms["limit"], None, "terms must contain a limit parameter that is not of type None")
     
     processed_terms = processTermsForUrl(terms)
 
-    return f"https://www.reddit.com{subreddit}{processed_terms}"
+    return f"https://www.reddit.com{subreddit}/search?{processed_terms}"
 
 
 def processTermsForUrl(terms: dict) -> str:
@@ -69,11 +66,11 @@ def processTermsForUrl(terms: dict) -> str:
     checkObjAndRaiseTypeError(terms, dict, "terms must be of type dict")
 
     terms_list = [f"{key}={term}" for key, term in terms.items()]
-    return '/search?' '&'.join(terms_list)
+    return '&'.join(terms_list)
 
 
 
-def parseLinksFromHtml(html: any) -> list:
+def parseLinksFromHtml(html) -> list:
     soup = BeautifulSoup(html, 'html5lib')
 
     extracted_tags = soup.find_all('a', attrs={'data-testid' : 'post-title'})
@@ -112,7 +109,7 @@ def getRedditHTMLViaSelenium(url: str) -> str:
     try:
         WebDriverWait(driver,10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
     except TimeOutException:
-        print("TimeoutException: Failed to load page")
+        raise TimeoutException("TimeoutException: Failed to load page")
 
     page_source = driver.page_source
 
@@ -121,7 +118,7 @@ def getRedditHTMLViaSelenium(url: str) -> str:
     return page_source
 
 
-def searchRedditAndReturnResponse(q: str, search_type: str, limit: str, subreddits: str) -> dict:
+def searchRedditAndReturnResponse(q: str, search_type: str, limit: str, subreddits: str) -> JsonResponse:
 
     checkObjAndRaiseTypeError(q, str, "q must be of type str")
     checkObjAndRaiseTypeError(search_type, str, "search_type must be of type str")
@@ -152,4 +149,7 @@ def searchRedditAndReturnResponse(q: str, search_type: str, limit: str, subreddi
         
         total_result_set.extend(search_links)
 
-    return total_result_set
+    response = JsonResponse(total_result_set, safe = False)
+    response.status_code = 201
+
+    return response
