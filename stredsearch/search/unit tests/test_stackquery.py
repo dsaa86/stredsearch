@@ -47,14 +47,6 @@ class TestStackQuery(TestCase):
         # Assert that the function returned the expected result
         self.assertEqual(response, [])
 
-    @patch('search.stackquery.checkObjAndRaiseTypeError')
-    @patch('search.stackquery.checkStringAndRaiseValueError')
-    @patch('search.stackquery.getRoutePrepend')
-    @patch('search.stackquery.getAPIRoute')
-    @patch('search.stackquery.getRouteAppend')
-    @patch('requests.get')
-    @patch ('search.stackquery.sanitiseStackOverflowResponse')
-    def test_queryStackOverflow_raises_SSLError(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
         mock_checkObjAndRaiseTypeError.return_value = True
         mock_checkStringAndRaiseValueError.return_value = True
         mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
@@ -65,6 +57,25 @@ class TestStackQuery(TestCase):
         mock_get.side_effect = requests.exceptions.SSLError('SSL Error')
         response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
         self.assertEqual(response, { "Error": { "SSLError": 'SSL Error' } })
+
+    # @patch('search.stackquery.checkObjAndRaiseTypeError')
+    # @patch('search.stackquery.checkStringAndRaiseValueError')
+    # @patch('search.stackquery.getRoutePrepend')
+    # @patch('search.stackquery.getAPIRoute')
+    # @patch('search.stackquery.getRouteAppend')
+    # @patch('requests.get')
+    # @patch ('search.stackquery.sanitiseStackOverflowResponse')
+    # def test_queryStackOverflow_raises_SSLError(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
+    #     mock_checkObjAndRaiseTypeError.return_value = True
+    #     mock_checkStringAndRaiseValueError.return_value = True
+    #     mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
+    #     mock_getAPIRoute.return_value = '/2.3/questions'
+    #     mock_getRouteAppend.return_value = 'stackoverflow'
+    #     mock_sanitiseStackOverflowResponse.return_value = []
+    #     # mock_get.return_value = MagicMock(content='{"items": []}')
+    #     mock_get.side_effect = requests.exceptions.SSLError('SSL Error')
+    #     response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
+    #     self.assertEqual(response, { "Error": { "SSLError": 'SSL Error' } })
 
     
     @patch('search.stackquery.checkObjAndRaiseTypeError')
