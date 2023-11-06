@@ -1,324 +1,308 @@
-# from lib2to3.pytree import convert
+import os
+import sys
+import unittest
+from lib2to3.pytree import convert
+from re import M
+from typing import Union
+from unittest.mock import MagicMock, patch
 
-# from stackquery import *
-# from django.test import TestCase
+import requests
+from django.test import TestCase
+from search.helperfunctions import *
+from search.stackquery import *
 
-
-# # Create your tests here.
-# class TestStackQuery(TestCase):
-
-#     def setUp(self) -> None:
-#         super().setUp()
-#         self.sanitiseTestData = {
-#             'items': [
-#                 {
-#                     'tags': 
-#                         ['python', 'pygame'],
-#                     'owner': {
-#                         'account_id': 29127741,
-#                         'reputation': 9, 
-#                         'user_id': 22313711, 
-#                         'user_type': 
-#                         'registered', 
-#                         'profile_image': 'https://lh3.googleusercontent.com/a/AAcHTtcoWqgi1AuJtw2Y5gvmpDMno3ky_hb7J-sprJBNT6DUiwE=k-s256', 
-#                         'display_name': 'Beanss', 
-#                         'link': 'https://stackoverflow.com/users/22313711/beanss'
-#                     }, 
-#                     'is_answered': False, 
-#                     'view_count': 15, 
-#                     'closed_date': 1698651661, 
-#                     'answer_count': 0, 
-#                     'score': -1, 
-#                     'last_activity_date': 1698651714, 
-#                     'creation_date': 1698628269, 
-#                     'last_edit_date': 1698651714, 
-#                     'question_id': 77385782, 
-#                     'link': 'https://stackoverflow.com/questions/77385782/how-do-i-make-the-game-over-title-hover-up-and-down',
-#                     'closed_reason': 'Duplicate', 
-#                     'title': 'How do I make the Game Over title hover up and down?'
-#                 }, 
-#                 {
-#                     'tags': ['python', 'base64', 'animated-gif'], 'owner': {
-                        
-#                         'account_id': 15797258, 
-#                         'reputation': 350, 
-#                         'user_id': 11398747, 
-#                         'user_type': 'registered', 
-#                         'profile_image': 'https://lh4.googleusercontent.com/-c1AEHYfVwQo/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rf0x4NnedYPXADJ7R9MCtdbXqWKyg/mo/photo.jpg?sz=256', 
-#                         'display_name': 'Travis Tay', 
-#                         'link': 'https://stackoverflow.com/users/11398747/travis-tay'
-#                     }, 
-#                     'is_answered': False, 
-#                     'view_count': 343, 
-#                     'answer_count': 1, 
-#                     'score': 0, 
-#                     'last_activity_date': 1698651706, 
-#                     'creation_date': 1590421576, 
-#                     'last_edit_date': 1698651706, 
-#                     'question_id': 62006013, 
-#                     'content_license': 'CC BY-SA 4.0', 
-#                     'link': 'https://stackoverflow.com/questions/62006013/gif-to-base64-encoding-without-saving-file', 
-#                     'title': 'Gif to base64 encoding without saving file'
-#                 }
-#             ]
-#         }
-
-#         self.sanitiseTestExpectedResponse = [
-#             {
-#                 'tags': 
-#                     ['python', 'pygame'],
-#                 'owner': {
-#                     'account_id': 29127741,
-#                     'reputation': 9, 
-#                     'user_id': 22313711, 
-#                     'user_type': 
-#                     'registered', 
-#                     'profile_image': 'https://lh3.googleusercontent.com/a/AAcHTtcoWqgi1AuJtw2Y5gvmpDMno3ky_hb7J-sprJBNT6DUiwE=k-s256', 
-#                     'display_name': 'Beanss', 
-#                     'link': 'https://stackoverflow.com/users/22313711/beanss'
-#                 }, 
-#                 'is_answered': False, 
-#                 'view_count': 15, 
-#                 'closed_date': 1698651661, 
-#                 'answer_count': 0, 
-#                 'score': -1, 
-#                 'last_activity_date': 1698651714, 
-#                 'creation_date': 1698628269, 
-#                 'last_edit_date': 1698651714, 
-#                 'question_id': 77385782, 
-#                 'link': 'https://stackoverflow.com/questions/77385782/how-do-i-make-the-game-over-title-hover-up-and-down',
-#                 'closed_reason': 'Duplicate', 
-#                 'title': 'How do I make the Game Over title hover up and down?'
-#             }, 
-#             {
-#                 'tags': ['python', 'base64', 'animated-gif'], 'owner': {
-                    
-#                     'account_id': 15797258, 
-#                     'reputation': 350, 
-#                     'user_id': 11398747, 
-#                     'user_type': 'registered', 
-#                     'profile_image': 'https://lh4.googleusercontent.com/-c1AEHYfVwQo/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rf0x4NnedYPXADJ7R9MCtdbXqWKyg/mo/photo.jpg?sz=256', 
-#                     'display_name': 'Travis Tay', 
-#                     'link': 'https://stackoverflow.com/users/11398747/travis-tay'
-#                 }, 
-#                 'is_answered': False, 
-#                 'view_count': 343, 
-#                 'answer_count': 1, 
-#                 'score': 0, 
-#                 'last_activity_date': 1698651706, 
-#                 'creation_date': 1590421576, 
-#                 'last_edit_date': 1698651706, 
-#                 'question_id': 62006013, 
-#                 'content_license': 'CC BY-SA 4.0', 
-#                 'link': 'https://stackoverflow.com/questions/62006013/gif-to-base64-encoding-without-saving-file', 
-#                 'title': 'Gif to base64 encoding without saving file'
-#             }
-#         ]
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-#     def testGetRoutePrepend(self):
-#         self.assertEqual(getRoutePrepend(), "https://api.stackexchange.com/2.2/")
-#         self.assertEqual(type(getRoutePrepend()), str)
+class TestStackQuery(TestCase):
 
-#     def testGetAPIRoute(self):
-#         self.assertEqual(getAPIRoute("questions", "question_by_tag"), "/2.3/questions")
-#         self.assertEqual(getAPIRoute("search", "advanced_search"), "/2.3/search/advanced")
+    @patch('search.stackquery.checkObjAndRaiseTypeError')
+    @patch('search.stackquery.checkStringAndRaiseValueError')
+    @patch('search.stackquery.getRoutePrepend')
+    @patch('search.stackquery.getAPIRoute')
+    @patch('search.stackquery.getRouteAppend')
+    @patch('requests.get')
+    @patch ('search.stackquery.sanitiseStackOverflowResponse')
+    def test_queryStackOverflow(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
+        # Set up the mocks
+        mock_checkObjAndRaiseTypeError.return_value = True
+        mock_checkStringAndRaiseValueError.return_value = True
+        mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
+        mock_getAPIRoute.return_value = '/2.3/questions'
+        mock_getRouteAppend.return_value = 'stackoverflow'
+        mock_sanitiseStackOverflowResponse.return_value = []
+        mock_get.return_value = MagicMock(content='{"items": []}')
 
-#     def testGetRouteAppend(self):
-#         self.assertEqual(getRouteAppend(), "&site=stackoverflow")
-#         self.assertEqual(type(getRouteAppend()), str)
+        # Call the function with test inputs
+        response = queryStackOverflow('questions', 'question_by_tag', {'tagged': 'python'})
 
-#     def testSanitiseStackOverflowResponse(self):
-#         with self.assertRaises(TypeError):
-#             sanitiseStackOverflowResponse("test")
-#             sanitiseStackOverflowResponse(1)
-#             sanitiseStackOverflowResponse(1.0)
-#             sanitiseStackOverflowResponse(True)
-#             sanitiseStackOverflowResponse(False)
-#             sanitiseStackOverflowResponse(None)
-#             sanitiseStackOverflowResponse(["test"])
+        # Assert that the mocks were called with the correct arguments
+        mock_getRoutePrepend.assert_called_once()
+        mock_getAPIRoute.assert_called_once_with('questions', 'question_by_tag')
+        mock_getRouteAppend.assert_called_once()
+        mock_get.assert_called_once_with('https://api.stackexchange.com/2.3/questions', {'tagged': 'python', 'site': 'stackoverflow'})
+        mock_sanitiseStackOverflowResponse.assert_called_once_with({'items': []})
 
-#         self.assertEqual(sanitiseStackOverflowResponse({"items": [{"title": "test title", "link": "test link"}]}), [{"title": "test title", "link": "test link"}])
+        # Assert that the function returned the expected result
+        self.assertEqual(response, [])
 
-#         self.assertEqual(type(sanitiseStackOverflowResponse(self.sanitiseTestData)), list)
+    @patch('search.stackquery.checkObjAndRaiseTypeError')
+    @patch('search.stackquery.checkStringAndRaiseValueError')
+    @patch('search.stackquery.getRoutePrepend')
+    @patch('search.stackquery.getAPIRoute')
+    @patch('search.stackquery.getRouteAppend')
+    @patch('requests.get')
+    @patch ('search.stackquery.sanitiseStackOverflowResponse')
+    def test_queryStackOverflow_raises_SSLError(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
+        mock_checkObjAndRaiseTypeError.return_value = True
+        mock_checkStringAndRaiseValueError.return_value = True
+        mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
+        mock_getAPIRoute.return_value = '/2.3/questions'
+        mock_getRouteAppend.return_value = 'stackoverflow'
+        mock_sanitiseStackOverflowResponse.return_value = []
+        # mock_get.return_value = MagicMock(content='{"items": []}')
+        mock_get.side_effect = requests.exceptions.SSLError('SSL Error')
+        response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
+        self.assertEqual(response, { "Error": { "SSLError": 'SSL Error' } })
 
-#     def testGetOnlyQuestionsFromStackOverflowResponse(self):
-#         with self.assertRaises(TypeError):
-#             getOnlyQuestionsFromStackOverflowResponse("test")
-#             getOnlyQuestionsFromStackOverflowResponse(1)
-#             getOnlyQuestionsFromStackOverflowResponse(1.0)
-#             getOnlyQuestionsFromStackOverflowResponse(True)
-#             getOnlyQuestionsFromStackOverflowResponse(False)
-#             getOnlyQuestionsFromStackOverflowResponse(None)
-#             getOnlyQuestionsFromStackOverflowResponse(["test"])
+    
+    @patch('search.stackquery.checkObjAndRaiseTypeError')
+    @patch('search.stackquery.checkStringAndRaiseValueError')
+    @patch('search.stackquery.getRoutePrepend')
+    @patch('search.stackquery.getAPIRoute')
+    @patch('search.stackquery.getRouteAppend')
+    @patch('requests.get')
+    @patch ('search.stackquery.sanitiseStackOverflowResponse')
+    def test_queryStackOverflow_raises_Timeout_Error(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
+        mock_checkObjAndRaiseTypeError.return_value = True
+        mock_checkStringAndRaiseValueError.return_value = True
+        mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
+        mock_getAPIRoute.return_value = '/2.3/questions'
+        mock_getRouteAppend.return_value = 'stackoverflow'
+        mock_sanitiseStackOverflowResponse.return_value = []
+        # mock_get.return_value = MagicMock(content='{"items": []}')
+        mock_get.side_effect = requests.exceptions.Timeout('Timeout Error')
+        response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
+        self.assertEqual(response, { "Error": { "Timeout": 'Timeout Error' } })
+    
+    @patch('search.stackquery.checkObjAndRaiseTypeError')
+    @patch('search.stackquery.checkStringAndRaiseValueError')
+    @patch('search.stackquery.getRoutePrepend')
+    @patch('search.stackquery.getAPIRoute')
+    @patch('search.stackquery.getRouteAppend')
+    @patch('requests.get')
+    @patch ('search.stackquery.sanitiseStackOverflowResponse')
+    def test_queryStackOverflow_raises_Connection_Error(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
+        mock_checkObjAndRaiseTypeError.return_value = True
+        mock_checkStringAndRaiseValueError.return_value = True
+        mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
+        mock_getAPIRoute.return_value = '/2.3/questions'
+        mock_getRouteAppend.return_value = 'stackoverflow'
+        mock_sanitiseStackOverflowResponse.return_value = []
+        # mock_get.return_value = MagicMock(content='{"items": []}')
+        mock_get.side_effect = requests.exceptions.ConnectionError('Connection Error')
+        response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
+        self.assertEqual(response, { "Error": { "ConnectionError": 'Connection Error' } })
+    
+    @patch('search.stackquery.checkObjAndRaiseTypeError')
+    @patch('search.stackquery.checkStringAndRaiseValueError')
+    @patch('search.stackquery.getRoutePrepend')
+    @patch('search.stackquery.getAPIRoute')
+    @patch('search.stackquery.getRouteAppend')
+    @patch('requests.get')
+    @patch ('search.stackquery.sanitiseStackOverflowResponse')
+    def test_queryStackOverflow_raises_HTTPError(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
+        mock_checkObjAndRaiseTypeError.return_value = True
+        mock_checkStringAndRaiseValueError.return_value = True
+        mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
+        mock_getAPIRoute.return_value = '/2.3/questions'
+        mock_getRouteAppend.return_value = 'stackoverflow'
+        mock_sanitiseStackOverflowResponse.return_value = []
+        # mock_get.return_value = MagicMock(content='{"items": []}')
+        mock_get.side_effect = requests.exceptions.HTTPError('HTTP Error')
+        response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
+        self.assertEqual(response, { "Error": { "HTTPError": 'HTTP Error' } })
+    
+    @patch('search.stackquery.checkObjAndRaiseTypeError')
+    @patch('search.stackquery.checkStringAndRaiseValueError')
+    @patch('search.stackquery.getRoutePrepend')
+    @patch('search.stackquery.getAPIRoute')
+    @patch('search.stackquery.getRouteAppend')
+    @patch('requests.get')
+    @patch ('search.stackquery.sanitiseStackOverflowResponse')
+    def test_queryStackOverflow_raises_Too_Many_Redirects_Error(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
+        mock_checkObjAndRaiseTypeError.return_value = True
+        mock_checkStringAndRaiseValueError.return_value = True
+        mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
+        mock_getAPIRoute.return_value = '/2.3/questions'
+        mock_getRouteAppend.return_value = 'stackoverflow'
+        mock_sanitiseStackOverflowResponse.return_value = []
+        # mock_get.return_value = MagicMock(content='{"items": []}')
+        mock_get.side_effect = requests.exceptions.TooManyRedirects('TooManyRedirects Error')
+        response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
+        self.assertEqual(response, { "Error": { "TooManyRedirects": 'TooManyRedirects Error' } })
+    
+    @patch('search.stackquery.checkObjAndRaiseTypeError')
+    @patch('search.stackquery.checkStringAndRaiseValueError')
+    @patch('search.stackquery.getRoutePrepend')
+    @patch('search.stackquery.getAPIRoute')
+    @patch('search.stackquery.getRouteAppend')
+    @patch('requests.get')
+    @patch ('search.stackquery.sanitiseStackOverflowResponse')
+    def test_queryStackOverflow_raises_Request_Exception(self, mock_sanitiseStackOverflowResponse, mock_get, mock_getRouteAppend, mock_getAPIRoute, mock_getRoutePrepend, mock_checkStringAndRaiseValueError, mock_checkObjAndRaiseTypeError):
+        mock_checkObjAndRaiseTypeError.return_value = True
+        mock_checkStringAndRaiseValueError.return_value = True
+        mock_getRoutePrepend.return_value = 'https://api.stackexchange.com'
+        mock_getAPIRoute.return_value = '/2.3/questions'
+        mock_getRouteAppend.return_value = 'stackoverflow'
+        mock_sanitiseStackOverflowResponse.return_value = []
+        # mock_get.return_value = MagicMock(content='{"items": []}')
+        mock_get.side_effect = requests.exceptions.RequestException('Request Exception')
+        response = queryStackOverflow('questions', 'related_questions', {'ids': '123'})
+        self.assertEqual(response, { "Error": { "RequestException": 'Request Exception' } })
 
-#         with self.assertRaises(KeyError):
-#             getOnlyQuestionsFromStackOverflowResponse({"items": [{"title": "test title", "link": "test link"}]})
-#             getOnlyQuestionsFromStackOverflowResponse({"items": [{"title": "test title", "link": "test link"}, {"title": "test title 2", "link": "test link 2"}]})
+    def test_checkObjAndRaiseTypeError_with_correct_type(self):
+        result = checkObjAndRaiseTypeError("test", str, "Error message")
+        self.assertEqual(result, True)
+
+
+    def test_checkObjAndRaiseTypeError_with_incorrect_type(self):
+        with self.assertRaises(TypeError):
+            checkObjAndRaiseTypeError("test", int, "Error message")
+
+
+    def test_checkStringAndRaiseValueError_with_correct_value(self):
+        result = checkStringAndRaiseValueError("test", " ", "Error message")
+        self.assertEqual(result, True)
+
+
+    def test_checkStringAndRaiseValueError_with_incorrect_value(self):
+        with self.assertRaises(ValueError):
+            checkStringAndRaiseValueError("test", "test", "Error message")
+
         
-#         with self.assertRaises(ValueError):
-#             getOnlyQuestionsFromStackOverflowResponse({"items": []})
+    def test_checkElemExistsInListOrDict_with_elem_in_list(self):
+        result = checkElemExistsInListOrDict("test", ["test", "another"], "Error message")
+        self.assertEqual(result, True)
 
-#         self.assertEqual(getOnlyQuestionsFromStackOverflowResponse(self.sanitiseTestData), self.sanitiseTestExpectedResponse)
+    def test_checkElemExistsInListOrDict_with_elem_not_in_list(self):
+        with self.assertRaises(ValueError):
+            checkElemExistsInListOrDict("not_in_list", ["test", "another"], "Error message")
 
-#         self.assertNotEqual(type(getOnlyQuestionsFromStackOverflowResponse(self.sanitiseTestData)), dict)
+    def test_checkElemExistsInListOrDict_with_elem_in_dict(self):
+        result = checkElemExistsInListOrDict("test", {"test": "value", "another": "value"}, "Error message")
+        self.assertEqual(result, True)
 
-#     def testGetQuestionData(self):
-#         with self.assertRaises(TypeError):
-#             # Is param not of type dict
-#             getQuestionData("test")
-#             getQuestionData(1)
-#             getQuestionData(1.0)
-#             getQuestionData(True)
-#             getQuestionData(False)
-#             getQuestionData(None)
-#             getQuestionData(["test"])
-#             # Is param["tags"] not of type list
-#             getQuestionData({"title": "test title", "tags": "test tag"})
-#             getQuestionData({"title": "test title", "tags": 1})
-#             getQuestionData({"title": "test title", "tags": 1.0})
-#             getQuestionData({"title": "test title", "tags": True})
-#             getQuestionData({"title": "test title", "tags": False})
-#             getQuestionData({"title": "test title", "tags": None})
-#             getQuestionData({"title": "test title", "tags": {"test tag"}})
-#             # Is param["owner"] not of type dict
-#             getQuestionData({"title": "test title", "owner": ["test owner"]})
-#             getQuestionData({"title": "test title", "owner": "test owner"})
-#             getQuestionData({"title": "test title", "owner": 1})
-#             getQuestionData({"title": "test title", "owner": 1.0})
-#             getQuestionData({"title": "test title", "owner": True})
-#             getQuestionData({"title": "test title", "owner": False})
-#             getQuestionData({"title": "test title", "owner": None})
+    def test_checkElemExistsInListOrDict_with_elem_not_in_dict(self):
+        with self.assertRaises(ValueError):
+            checkElemExistsInListOrDict("not_in_dict", {"test": "value", "another": "value"}, "Error message")
 
-#         with self.assertRaises(KeyError):
-#             # Param not containing key "tags"
-#             getQuestionData({"title": "test title", "link": "test link", "owner": {"display_name": "test display name"}})
-#             # Param not containing key "owner"
-#             getQuestionData({"title": "test title", "link": "test link", "tags" : ["tag1", "tag2"]})
+    
+    @patch('stackquery.StackRouteMeta.objects.get')
+    def test_getRoutePrepend(self, mock_get):
+        # Set up the mock
+        mock_obj = MagicMock()
+        mock_obj.route_prepend = 'https://api.stackexchange.com/2.3/'
+        mock_get.return_value = mock_obj
 
-#         self.assertEqual(getQuestionData(self.sanitiseTestExpectedResponse[0]), {
-#             'tags': 'python,pygame', 
-#             'user_id': 22313711, 
-#             'display_name': 'Beanss',
-#             'is_answered': False, 
-#             'view_count': 15,
-#             'answer_count': 0, 
-#             'score': -1, 
-#             'last_activity_date': 1698651714, 
-#             'creation_date': 1698628269, 
-#             'last_edit_date': 1698651714, 
-#             'question_id': 77385782, 
-#             'link': 'https://stackoverflow.com/questions/77385782/how-do-i-make-the-game-over-title-hover-up-and-down',
-#             'title': 'How do I make the Game Over title hover up and down?'
-#         })
+        # Call the function
+        result = getRoutePrepend()
+
+        # Assert that the mock was called with the correct arguments
+        mock_get.assert_called_once_with(pk=1)
+
+        # Assert that the function returned the expected result
+        self.assertEqual(result, 'https://api.stackexchange.com/2.3/')
 
 
-#     def testConvertListToString(self):
-#         with self.assertRaises(TypeError):
-#             convertListToString("test")
-#             convertListToString(1)
-#             convertListToString(1.0)
-#             convertListToString(True)
-#             convertListToString(False)
-#             convertListToString(None)
-#             convertListToString(["test"])
-#             convertListToString(["test"], 1)
-#             convertListToString(["test"], 1.0)
-#             convertListToString(["test"], True)
-#             convertListToString(["test"], False)
-#             convertListToString(["test"], None)
-#             convertListToString(["test"], ["test"])
-#             convertListToString(["test"], {"test"})
-#             convertListToString(["test"], {"test": "test"})
-#             convertListToString(["test"], " ")
-#             convertListToString(["test"], "1")
+    @patch('stackquery.StackRoute.objects.filter')
+    def test_getAPIRoute(self, mock_filter):
+        # Set up the mock
+        mock_obj = MagicMock()
+        mock_obj.route = 'questions'
+        mock_filter.return_value.first.return_value = mock_obj
 
-#         self.assertEqual(convertListToString(["test"], ","), "test")
-#         self.assertEqual(convertListToString(["test", "test2"], ","), "test,test2")
-#         self.assertEqual(convertListToString(["test", "test2", "test3"]), "testtest2test3")
+        # Call the function
+        result = getAPIRoute('questions', 'related_questions')
+
+        # Assert that the mock was called with the correct arguments
+        mock_filter.assert_called_once_with(route_category='questions', route_query='related_questions')
+
+        # Assert that the function returned the expected result
+        self.assertEqual(result, 'questions')
 
 
-#     def testExtractOwnerData(self):
-#         with self.assertRaises(TypeError):
-#             # Question param is not dict
-#             extractOwnerData("test", "test")
-#             extractOwnerData(1, "test")
-#             extractOwnerData(1.0, "test")
-#             extractOwnerData(True, "test")
-#             extractOwnerData(False, "test")
-#             extractOwnerData(None, "test")
-#             # Key param is not string
-#             extractOwnerData({"test": "test"}, 1)
-#             extractOwnerData({"test": "test"}, 1.0)
-#             extractOwnerData({"test": "test"}, True)
-#             extractOwnerData({"test": "test"}, False)
-#             extractOwnerData({"test": "test"}, None)
-#             extractOwnerData({"test": "test"}, ["test"])
-#             extractOwnerData({"test": "test"}, {"test"})
-#             # Question["owner"] is not dict
-#             extractOwnerData({"test" : "test", "owner" : "owner"}, "test")
-#             extractOwnerData({"test" : "test", "owner" : 1}, "test")
-#             extractOwnerData({"test" : "test", "owner" : 1.0}, "test")
-#             extractOwnerData({"test" : "test", "owner" : True}, "test")
-#             extractOwnerData({"test" : "test", "owner" : False}, "test")
-#             extractOwnerData({"test" : "test", "owner" : None}, "test")
-#             extractOwnerData({"test" : "test", "owner" : ["test"]}, "test")
-#             # Question["owner"][key] is not string
-#             extractOwnerData({"test" : "test", "owner" : {"test": 1}}, "test")
-#             extractOwnerData({"test" : "test", "owner" : {"test": 1.0}}, "test")
-#             extractOwnerData({"test" : "test", "owner" : {"test": True}}, "test")
-#             extractOwnerData({"test" : "test", "owner" : {"test": False}}, "test")
-#             extractOwnerData({"test" : "test", "owner" : {"test": None}}, "test")
-#             extractOwnerData({"test" : "test", "owner" : {"test": ["test"]}}, "test")
-#             extractOwnerData({"test" : "test", "owner" : {"test": {"test"}}}, "test")
+    @patch('stackquery.StackRouteMeta.objects.get')
+    def test_getRouteAppend(self, mock_get):
+        # Set up the mock
+        mock_obj = MagicMock()
+        mock_obj.route_append = 'stackoverflow'
+        mock_get.return_value = mock_obj
 
-#         with self.assertRaises(KeyError):
-#             # Question param does not contain key "owner"
-#             extractOwnerData({"test" : "test"}, "test")
-#             # Question["owner"] does not contain key "test"
-#             extractOwnerData({"test" : "test", "owner" : {"test2": "test"}}, "test")
+        # Call the function
+        result = getRouteAppend()
 
-#         with self.assertRaises(ValueError):
-#             # Question["owner"][key] is empty string
-#             extractOwnerData({"test" : "test", "owner" : {"test": ""}}, "test")
+        # Assert that the mock was called with the correct arguments
+        mock_get.assert_called_once_with(pk=1)
 
-#         self.assertEqual(extractOwnerData({"test" : "test", "owner" : {"user_id": "sample user id"}}, "user_id"), "sample user id")
-
-#         self.assertEqual(extractOwnerData({"test" : "test", "owner" : {"display_name": "sample display name"}}, "display_name"), "sample display name")
+        # Assert that the function returned the expected result
+        self.assertEqual(result, 'stackoverflow')
 
 
-#     def testExtractRelevantQuestionDataFieldsForQuestion(self):
-#         with self.assertRaises(TypeError):
-#             # Param is not dict
-#             extractRelevantQuestionDataFieldsForQuestion("test")
-#             extractRelevantQuestionDataFieldsForQuestion(1)
-#             extractRelevantQuestionDataFieldsForQuestion(1.0)
-#             extractRelevantQuestionDataFieldsForQuestion(True)
-#             extractRelevantQuestionDataFieldsForQuestion(False)
-#             extractRelevantQuestionDataFieldsForQuestion(None)
-#             extractRelevantQuestionDataFieldsForQuestion(["test"])
+    @patch('stackquery.StackRouteMeta.objects.get')
+    def test_getRouteAppend(self, mock_get):
+        # Set up the mock
+        mock_obj = MagicMock()
+        mock_obj.route_append = 'stackoverflow'
+        mock_get.return_value = mock_obj
 
-#         self.assertEqual(extractRelevantQuestionDataFieldsForQuestion({"test": "test"}), {})
+        # Call the function
+        result = getRouteAppend()
 
-#         self.assertEqual(extractRelevantQuestionDataFieldsForQuestion({"is_answered" : True, "answer_count" : 2, "question_id" : 123456789}), {"is_answered" : "is_answered", "answer_count" : "answer_count", "question_id" : "question_id"})
+        # Assert that the mock was called with the correct arguments
+        mock_get.assert_called_once_with(pk=1)
 
-#         self.assertEqual(extractRelevantQuestionDataFieldsForQuestion({"is_answered" : True, "answer_count" : 2, "question_id" : 123456789, "date_closed" : 1234578654}), {"is_answered" : "is_answered", "answer_count" : "answer_count", "question_id" : "question_id"})
-
-#     def testGetQuestionDataFields(self):
-#         self.assertEqual(getQuestionDataFields(), ["is_answered", "view_count", "answer_count", "score", "last_activity_date", "creation_date", "last_edit_date", "question_id", "link", "title"])
-
-#         self.assertEqual(type(getQuestionDataFields()), list)
+        # Assert that the function returned the expected result
+        self.assertEqual(result, 'stackoverflow')
 
 
-#     def testConvertMSToDateTime(self):
-#         with self.assertRaises(TypeError):
-#             # Param is not int
-#             convertMSToDateTime("test")
-#             convertMSToDateTime(1.0)
-#             convertMSToDateTime(True)
-#             convertMSToDateTime(False)
-#             convertMSToDateTime(None)
-#             convertMSToDateTime(["test"])
-#             convertMSToDateTime({"test"})
+    @patch('search.stackquery.getOnlyQuestionsFromStackOverflowResponse')
+    @patch('search.stackquery.getQuestionData')
+    def test_sanitiseStackOverflowResponse(self, mock_getQuestionData, mock_getOnlyQuestionsFromStackOverflowResponse):
 
-#         self.assertEqual(convertMSToDateTime(1634217600), datetime.datetime(2021, 10, 14, 0, 0))
+        json_data = {
+                'items': [
+                    {"tags" : ['python'], 
+                    "owner": {
+                        'user_id' : 123456,
+                        'display_name' : 'david'
+                        }
+                    }, 
+                    {"tags" : ['python'],
+                    "owner": {
+                        'user_id' : 123456,
+                        'display_name' : 'david'
+                        }
+                    }
+                ]
+            }
+
+        # Set up the mocks
+        mock_getOnlyQuestionsFromStackOverflowResponse.return_value = [{"tags" : ['python'], "owner": {'user_id' : 123456, 'display_name' : 'david'}}, {"tags" : ['python'], "owner": {'user_id' : 123456, 'display_name' : 'david'}}]
+
+        mock_getQuestionData.side_effect = {
+            'tags' : 'python',
+            'user_id' : 123456,
+            'display_name' : 'david',
+        }
+
+        # Call the function
+        result = sanitiseStackOverflowResponse(json_data)
+
+        # Assert that the mocks were called with the correct arguments
+        mock_getOnlyQuestionsFromStackOverflowResponse.assert_called_once_with(json_data)
+        mock_getQuestionData.assert_any_call({"tags" : ['python'], "owner": {'user_id' : 123456, 'display_name' : 'david'}})
+        mock_getQuestionData.assert_any_call({"tags" : ['python'], "owner": {'user_id' : 123456, 'display_name' : 'david'}})
+
+        # Assert that the function returned the expected result
+        self.assertEqual(result, ['tags', 'user_id'])

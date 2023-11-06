@@ -11,15 +11,21 @@ from search.models import StackQuestionDataFields, StackRoute, StackRouteMeta
 def checkObjAndRaiseTypeError(test_obj: object, test_type, error_msg: str):
     if not isinstance(test_obj, test_type):
         raise TypeError(error_msg)
+    else:
+        return True
 
 
 def checkStringAndRaiseValueError(test_string: str, test_value: str, error_msg: str):
     if test_string == test_value:
         raise ValueError(error_msg)
+    else:
+        return True
     
 def checkElemExistsInListOrDict(elem: str, list_or_dict: Union[list, dict], error_msg: str):
     if elem not in list_or_dict:
         raise ValueError(error_msg)
+    else:
+        return True
 
 
 def queryStackOverflow(category:str, query:str, filters:dict) -> dict:
