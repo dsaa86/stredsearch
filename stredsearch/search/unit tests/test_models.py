@@ -1,5 +1,6 @@
 import os
 import sys
+import warnings
 from datetime import datetime
 
 from django.test import TestCase
@@ -7,10 +8,16 @@ from search.models import *
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+
 class StackParamsTest(TestCase):
     def setUp(self):
         # Set up a test instance of StackParams
         StackParams.objects.create(param_name="Test Param", param_description="Test Description")
+        warnings.filterwarnings(
+            'ignore', 
+            'DateTimeField StackQuestion.creation_date received a naive datetime (.*) while time zone support is active.', 
+            RuntimeWarning
+        )
 
     def test_param_name(self):
         # Test the param_name property
@@ -110,66 +117,6 @@ class StackQuestionDataFieldsTest(TestCase):
         # Test the __str__ method
         instance = StackQuestionDataFields.objects.get(data_field_name="Test Field")
         self.assertEqual(str(instance), "Test Field")
-
-
-class StackRouteTest(TestCase):
-    def setUp(self):
-        # Set up a test instance of StackRoute
-        param = StackParams.objects.create(param_name="Test Param", param_description="Test Description")
-        self.route = StackRoute.objects.create(route_category="Test Category", route_query="Test Query", route="Test Route")
-        self.route.params.add(param)
-
-    def test_route_category(self):
-        # Test the route_category property
-        self.assertEqual(self.route.route_category, "Test Category")
-
-    def test_route_query(self):
-        # Test the route_query property
-        self.assertEqual(self.route.route_query, "Test Query")
-
-    def test_route(self):
-        # Test the route property
-        self.assertEqual(self.route.route, "Test Route")
-
-    def test_params(self):
-        # Test the params property
-        param = self.route.params.all()[0]
-        self.assertEqual(param.param_name, "Test Param")
-        self.assertEqual(param.param_description, "Test Description")
-
-    def test_str_method(self):
-        # Test the __str__ method
-        self.assertEqual(str(self.route), "Test Route")
-
-
-class StackRouteTest(TestCase):
-    def setUp(self):
-        # Set up a test instance of StackRoute
-        param = StackParams.objects.create(param_name="Test Param", param_description="Test Description")
-        self.route = StackRoute.objects.create(route_category="Test Category", route_query="Test Query", route="Test Route")
-        self.route.params.add(param)
-
-    def test_route_category(self):
-        # Test the route_category property
-        self.assertEqual(self.route.route_category, "Test Category")
-
-    def test_route_query(self):
-        # Test the route_query property
-        self.assertEqual(self.route.route_query, "Test Query")
-
-    def test_route(self):
-        # Test the route property
-        self.assertEqual(self.route.route, "Test Route")
-
-    def test_params(self):
-        # Test the params property
-        param = self.route.params.all()[0]
-        self.assertEqual(param.param_name, "Test Param")
-        self.assertEqual(param.param_description, "Test Description")
-
-    def test_str_method(self):
-        # Test the __str__ method
-        self.assertEqual(str(self.route), "Test Route")
 
 
 class StackRouteTest(TestCase):
@@ -318,6 +265,12 @@ class StackQuestionTest(TestCase):
             question_id=1
         )
         self.question.tags.add(tag)
+
+        warnings.filterwarnings(
+            'ignore', 
+            'DateTimeField StackQuestion.creation_date received a naive datetime (.*) while time zone support is active.', 
+            RuntimeWarning
+        )
 
     def test_owner(self):
         # Test the owner property

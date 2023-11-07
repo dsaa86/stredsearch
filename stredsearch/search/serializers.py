@@ -80,7 +80,7 @@ class StackSearchQuerySerializer(serializers.Serializer):
     title = serializers.CharField(max_length=500)
     # user may have deleted account, questions with this occurence do not return a user_id and will throw an error if the field presence is enforeced
     user_id = serializers.IntegerField(required=False)
-    display_name = serializers.CharField(max_length=500)
+    display_name = serializers.CharField(max_length=500, required=False)
 
 
 class StackSearchErrorSerializer(serializers.Serializer):
@@ -91,8 +91,11 @@ class StackCategoriesSerializer(serializers.Serializer):
     category = serializers.CharField(max_length=50)
 
 
-class StackRoutesSerializer(serializers.Serializer):
-    route = serializers.CharField(max_length=50)
+class StackRouteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackRoute
+        fields = ['route_category', 'route_query', 'route', 'params']
+        depth = 1
 
 
 class StackRoutesURLAndParamsSerializer(serializers.Serializer):

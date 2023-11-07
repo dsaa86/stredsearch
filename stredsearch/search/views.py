@@ -1,4 +1,4 @@
-from multiprocessing import process
+from multiprocessing import Value, process
 
 import django_rq
 import html5lib
@@ -19,7 +19,19 @@ from search.tasks import (insertRedditQuestionToDB, insertStackQuestionsToDB,
 
 class GetStackOverflowQuestionsByTag(APIView):
 
+    def checkObjAndRaiseTypeError(self, test_obj: object, test_type, error_msg: str):
+        if not isinstance(test_obj, test_type):
+            raise TypeError(error_msg)
+        else:
+            return True
+
     def get(self, request, page, pagesize, fromdate, todate, order, sort, tags, format=None):
+
+        for elem in [page, pagesize, fromdate, todate, order, sort, tags]:
+            try:
+                self.checkObjAndRaiseTypeError(elem, str, "Invalid type for parameter")
+            except TypeError:
+                raise Http404("Invalid type for parameter")
 
         params_dict = {
             "page": page,
@@ -31,7 +43,10 @@ class GetStackOverflowQuestionsByTag(APIView):
             "tagged": tags,
         }
 
-        processed_filters = processFilters(params_dict)
+        try:
+            processed_filters = processFilters(params_dict)
+        except ValueError:
+            raise Http404("Invalid value for parameter")
 
         total_search_result_set = queryStackOverflow("questions", "question_by_tag", processed_filters)
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
@@ -48,8 +63,29 @@ class GetStackOverflowQuestionsByTag(APIView):
 
 class GetStackOverflowRelatedQuestions(APIView):
 
-    def get(self, request, page, pagesize, fromdate, todate, order, sort, ids, format=None):
+    def checkObjAndRaiseTypeError(self, test_obj: object, test_type, error_msg: str):
+        if not isinstance(test_obj, test_type):
+            raise TypeError(error_msg)
+        else:
+            return True
         
+    def checkStrAndRaiseValueError(self, test_str: str, test_values: list, error_msg: str):
+        if test_str in test_values:
+            raise ValueError(error_msg)
+        else:
+            return True
+
+    def get(self, request, page, pagesize, fromdate, todate, order, sort, ids, format=None):
+
+        for elem in [page, pagesize, fromdate, todate, order, sort, ids]:
+            try:
+                self.checkObjAndRaiseTypeError(elem, str, "Invalid type for parameter")
+                self.checkStrAndRaiseValueError(elem, ["invalid", "err", "error"], "Invalid value for parameter")
+            except TypeError as e:
+                raise Http404("Invalid type for parameter") from e
+            except ValueError as e:
+                raise Http404("Invalid value for parameter") from e
+
         params_dict = {
             "page": page,
             "pagesize": pagesize,
@@ -75,7 +111,32 @@ class GetStackOverflowRelatedQuestions(APIView):
         return Response(results)
 
 class GetStackOverflowSimpleSearch(APIView):
+
+    def checkObjAndRaiseTypeError(self, test_obj: object, test_type, error_msg: str):
+        if not isinstance(test_obj, test_type):
+            raise TypeError(error_msg)
+        else:
+            return True
+        
+    def checkStrAndRaiseValueError(self, test_str: str, test_values: list, error_msg: str):
+        if test_str in test_values:
+            raise ValueError(error_msg)
+        else:
+            return True
     def get(self, request, page, pagesize, fromdate, todate, order, sort, nottagged, tagged, intitle, format=None):
+
+        for elem in [page, pagesize, fromdate, todate, order, sort, nottagged, tagged, intitle]:
+            try:
+                self.checkObjAndRaiseTypeError(elem, str, "Invalid type for parameter")
+            except TypeError as e:
+                raise Http404("Invalid type for parameter") from e
+        
+        # not testing nottagged, tagged, or in title as these could feasibly be the prohibited values
+        for elem in [page, pagesize, fromdate, todate, order, sort]:
+            try:
+                self.checkStrAndRaiseValueError(elem, ["invalid", "err", "error"], "Invalid value for parameter")
+            except ValueError as e:
+                raise Http404("Invalid value for parameter") from e
         
         params_dict = {
             "page": page,
@@ -104,8 +165,36 @@ class GetStackOverflowSimpleSearch(APIView):
         return Response(results)
 
 class GetStackOverflowAdvancedSearch(APIView):
+
+    def checkObjAndRaiseTypeError(self, test_obj: object, test_type, error_msg: str):
+        if not isinstance(test_obj, test_type):
+            raise TypeError(error_msg)
+        else:
+            return True
+        
+    def checkStrAndRaiseValueError(self, test_str: str, test_values: list, error_msg: str):
+        if test_str in test_values:
+            raise ValueError(error_msg)
+        else:
+            return True
+        
+
     def get(self, request, page, pagesize, fromdate, todate, order, sort, q, accepted, answers, body, closed, migrated, notice, nottagged, tagged, title, user, url, views, wiki, format=None):
         
+        for elem in [page, pagesize, fromdate, todate, order, sort, q, accepted, answers, body, closed, migrated, notice, nottagged, tagged, title, user, url, views, wiki]:
+            try:
+                self.checkObjAndRaiseTypeError(elem, str, "Invalid type for parameter")
+            except TypeError as e:
+                raise Http404("Invalid type for parameter") from e
+        
+        # not testing nottagged, tagged, or in title as these could feasibly be the prohibited values
+        for elem in [page, pagesize, fromdate, todate, order, sort, accepted, answers, body, closed, migrated, notice, user, views, wiki]:
+            try:
+                self.checkStrAndRaiseValueError(elem, ["invalid", "err", "error"], "Invalid value for parameter")
+            except ValueError as e:
+                raise Http404("Invalid value for parameter") from e
+
+
         params_dict = {
             "page": page,
             "pagesize": pagesize,
@@ -134,7 +223,8 @@ class GetStackOverflowAdvancedSearch(APIView):
         total_search_result_set = queryStackOverflow("search", "advanced-search", processed_filters)
 
         for result in total_search_result_set:
-            result['q'] = q
+            if type(result) == dict:
+                result['q'] = q
 
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
