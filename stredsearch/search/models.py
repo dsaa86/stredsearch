@@ -40,6 +40,9 @@ class StackRoute(models.Model):
     route = models.CharField(blank=False, default="", max_length=200)
     params = models.ManyToManyField(StackParams)
 
+    def __str__(self) -> str:
+        return self.route
+
 
 class StackRouteMeta(models.Model):
     route_prepend = models.CharField(max_length=200)
@@ -75,6 +78,9 @@ class StredSearchQuestion(models.Model):
     title = models.CharField(max_length=200)
     times_returned_as_search_result = models.IntegerField(default=0)
 
+    def __str__(self) -> str:
+        return self.title
+
 
 class StackQuestion(StredSearchQuestion):
     owner = models.ForeignKey(StackUser, on_delete=models.PROTECT)
@@ -88,17 +94,20 @@ class StackQuestion(StredSearchQuestion):
     question_id = models.IntegerField()
     tags = models.ManyToManyField(StackTags, blank=True)
     def __str__(self) -> str:
-        return self.question_id
+        return str(self.question_id)
     
 
 class RedditSearchType(models.Model):
     search_type = models.CharField(max_length=10, blank=False, unique=True)
     def __str__(self) -> str:
-        return self.type
+        return self.search_type
     
 
 class RedditQuestion(StredSearchQuestion):
     search_type = models.ManyToManyField(RedditSearchType, blank=True)
+
+    def __str__(self) -> str:
+        return self.title
 
 
 
