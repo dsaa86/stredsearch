@@ -492,6 +492,7 @@ class GetAllStackOverflowParamsTest(APITestCase):
         StackParams.objects.create(param_name='param2', param_description='value2')
 
     def test_get_all_params(self):
+        url = reverse('GetAllStackOverflowParams')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 2)
