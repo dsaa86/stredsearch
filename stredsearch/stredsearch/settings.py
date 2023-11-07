@@ -10,8 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
+
 import environ
 
 env = environ.Env()
@@ -55,9 +56,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "search",
     "django_rq",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -208,3 +211,5 @@ RQ_QUEUES = {
         "DB": 0,
     }
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
