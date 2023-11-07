@@ -30,7 +30,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 class GetStackOverflowQuestionsByTagTest(APITestCase):
     def setUp(self):
-        # Set up a test instance of StackQuestion
         user = StackUser.objects.create(user_id=1, display_name="Test User")
         tag = StackTags.objects.create(tag_name="Test Tag", number_of_instances_on_so=10, number_of_cached_instances=5)
         self.question = StackQuestion.objects.create(
@@ -50,7 +49,6 @@ class GetStackOverflowQuestionsByTagTest(APITestCase):
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Mock the queryStackOverflow function to return a test question
         mock_queryStackOverflow.return_value = [self.question]
         mock_insertStackQuestionsToDB.return_value = None
         mock_enqueue.return_value = None
@@ -74,7 +72,6 @@ class GetStackOverflowQuestionsByTagTest(APITestCase):
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_error_handling(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Mock the queryStackOverflow function to return an error
         mock_queryStackOverflow.return_value = {"error": "Test error"}
         mock_insertStackQuestionsToDB.return_value = None
         mock_enqueue.return_value = None
@@ -94,7 +91,6 @@ class GetStackOverflowQuestionsByTagTest(APITestCase):
         self.assertEqual(response.data['error'], "Test error")
 
     def test_get_invalid_parameters(self):
-        # Test with invalid parameters
         request = self.factory.get(reverse('GetStackOverflowQuestionsByTag', kwargs={
             'page': 'invalid',
             'pagesize': 'invalid',
@@ -106,20 +102,19 @@ class GetStackOverflowQuestionsByTagTest(APITestCase):
         }))
         response = GetStackOverflowQuestionsByTag.as_view()(request, page='invalid', pagesize='invalid', fromdate='invalid', todate='invalid', order='invalid', sort='invalid', tags='invalid')
 
-        self.assertEqual(response.status_code, 404)  # Assuming your view returns a 400 status code for invalid parameters
+        self.assertEqual(response.status_code, 404)
 
     @patch('search.views.queryStackOverflow')
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_edge_cases(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Mock the queryStackOverflow function to return an empty list
         mock_queryStackOverflow.return_value = []
         mock_insertStackQuestionsToDB.return_value = None
         mock_enqueue.return_value = None
 
         request = self.factory.get(reverse('GetStackOverflowQuestionsByTag', kwargs={
             'page': "1",
-            'pagesize': "0",  # Edge case: pagesize is 0
+            'pagesize': "0",
             'fromdate': '2022-01-01',
             'todate': '2022-12-31',
             'order': 'desc',
@@ -135,14 +130,13 @@ class GetStackOverflowQuestionsByTagTest(APITestCase):
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_performance(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Mock the queryStackOverflow function to return a large list
         mock_queryStackOverflow.return_value = [self.question] * 1000
         mock_insertStackQuestionsToDB.return_value = None
         mock_enqueue.return_value = None
 
         request = self.factory.get(reverse('GetStackOverflowQuestionsByTag', kwargs={
             'page': "1",
-            'pagesize': "1000",  # Test performance with a large pagesize
+            'pagesize': "1000",
             'fromdate': '2022-01-01',
             'todate': '2022-12-31',
             'order': 'desc',
@@ -163,7 +157,6 @@ class GetStackOverflowRelatedQuestionsTest(APITestCase):
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_valid_parameters(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Mock the queryStackOverflow function to return a test question
         mock_queryStackOverflow.return_value = [{
             'tags': 'python,django',
             'is_answered': True,
@@ -201,7 +194,6 @@ class GetStackOverflowRelatedQuestionsTest(APITestCase):
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_invalid_parameters(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Test with invalid parameters
         request = self.factory.get(reverse('GetStackOverflowRelatedQuestions', kwargs={
             'page': 'invalid',
             'pagesize': 'invalid',
@@ -213,13 +205,12 @@ class GetStackOverflowRelatedQuestionsTest(APITestCase):
         }))
         response = GetStackOverflowRelatedQuestions.as_view()(request, page='invalid', pagesize='invalid', fromdate='invalid', todate='invalid', order='invalid', sort='invalid', ids='invalid')
 
-        self.assertEqual(response.status_code, 404)  # Assuming your view returns a 404 status code for invalid parameters
+        self.assertEqual(response.status_code, 404)
 
     @patch('search.views.queryStackOverflow')
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_api_error(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Mock the queryStackOverflow function to return an error
         mock_queryStackOverflow.return_value = {'error': 'API error'}
         mock_insertStackQuestionsToDB.return_value = None
         mock_enqueue.return_value = None
@@ -248,7 +239,6 @@ class GetStackOverflowSimpleSearchTest(APITestCase):
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_valid_parameters(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Mock the queryStackOverflow function to return a test question
         mock_queryStackOverflow.return_value = [{
             'tags': 'python,django',
             'is_answered': True,
@@ -288,7 +278,6 @@ class GetStackOverflowSimpleSearchTest(APITestCase):
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_invalid_parameters(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Test with invalid parameters
         request = self.factory.get(reverse('GetStackOverflowSimpleSearch', kwargs={
             'page': 'invalid',
             'pagesize': 'invalid',
@@ -302,7 +291,7 @@ class GetStackOverflowSimpleSearchTest(APITestCase):
         }))
         response = GetStackOverflowSimpleSearch.as_view()(request, page='invalid', pagesize='invalid', fromdate='invalid', todate='invalid', order='invalid', sort='invalid', nottagged='invalid', tagged='invalid', intitle='invalid')
 
-        self.assertEqual(response.status_code, 404)  # Assuming your view returns a 404 status code for invalid parameters
+        self.assertEqual(response.status_code, 404)
 
     @patch('search.views.queryStackOverflow')
     @patch('search.views.insertStackQuestionsToDB')
@@ -338,7 +327,6 @@ class GetStackOverflowAdvancedSearchTest(APITestCase):
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_valid_parameters(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Mock the queryStackOverflow function to return a test question
         mock_queryStackOverflow.return_value = [{
             'tags': 'python,django',
             'is_answered': True,
@@ -389,7 +377,6 @@ class GetStackOverflowAdvancedSearchTest(APITestCase):
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_invalid_parameters(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Test with invalid parameters
         request = self.factory.get(reverse('GetStackOverflowAdvancedSearch', kwargs={
             'page': 'invalid',
             'pagesize': 'invalid',
@@ -414,13 +401,12 @@ class GetStackOverflowAdvancedSearchTest(APITestCase):
         }))
         response = GetStackOverflowAdvancedSearch.as_view()(request, page='invalid', pagesize='invalid', fromdate='invalid', todate='invalid', order='invalid', sort='invalid', q='invalid', accepted='invalid', answers='invalid', body='invalid', closed='invalid', migrated='invalid', notice='invalid', nottagged='invalid', tagged='invalid', title='invalid', user='invalid', url='invalid', views='invalid', wiki='invalid')
 
-        self.assertEqual(response.status_code, 404)  # Assuming your view returns a 404 status code for invalid parameters
+        self.assertEqual(response.status_code, 404)
 
     @patch('search.views.queryStackOverflow')
     @patch('search.views.insertStackQuestionsToDB')
     @patch('rq.Queue.enqueue')
     def test_get_api_error(self, mock_enqueue, mock_insertStackQuestionsToDB, mock_queryStackOverflow):
-        # Mock the queryStackOverflow function to return an error
         mock_queryStackOverflow.return_value = {'error': 'API error'}
         mock_insertStackQuestionsToDB.return_value = None
         mock_enqueue.return_value = None
@@ -461,15 +447,10 @@ class GetStackOverflowAllTagsInDBTest(APITestCase):
         StackTags.objects.create(tag_name='django')
 
     def test_get_all_tags(self):
-        # Get the URL of the view
-        url = reverse('GetStackOverflowAllTagsInDB')  # Replace with the actual name of the view in your URL configuration
-        # Send a GET request to the view
+        url = reverse('GetStackOverflowAllTagsInDB')
         response = self.client.get(url)
-        # Check that the status code is 200 (OK)
         self.assertEqual(response.status_code, 200)
-        # Check that the number of tags returned is correct
         self.assertEqual(len(response.data), 2)
-        # Check that the names of the tags are correct
         self.assertEqual(response.data[0]['tag_name'], 'python')
         self.assertEqual(response.data[1]['tag_name'], 'django')
 
@@ -482,33 +463,24 @@ class GetStackOverflowTagsFromSiteTest(APITestCase):
     @mock.patch('search.views.insertStackTagsToDB')
     @mock.patch('django_rq.get_queue')
     def test_get_tags_from_site(self, mock_get_queue, mock_insert_tags, mock_get_tags):
-    # Mock the getTagsFromSO function to return a list of StackTags
         mock_tags = [StackTags(tag_name='python'), StackTags(tag_name='django')]
         mock_get_tags.return_value = mock_tags
 
-        # Mock the get_queue function to return a mock queue
         mock_queue = mock.Mock()
         mock_get_queue.return_value = mock_queue
 
-        # Get the URL of the view
-        url = reverse('GetStackOverflowTagsFromSite', kwargs={'pages': 1})  # Replace with the actual name of the view in your URL configuration
+        url = reverse('GetStackOverflowTagsFromSite', kwargs={'pages': 1})
 
-        # Send a GET request to the view
         response = self.client.get(url)
 
-        # Check that the status code is 200 (OK)
         self.assertEqual(response.status_code, 200)
 
-        # Check that the getTagsFromSO function was called with the correct arguments
         mock_get_tags.assert_called_once_with(1)
 
-        # Check that the get_queue function was called with the correct arguments
         mock_get_queue.assert_called_once_with("default", autocommit=True, is_async=True)
 
-        # Check that the enqueue method was called on the queue with the correct arguments
         mock_queue.enqueue.assert_called_once_with(mock_insert_tags, mock_tags)
 
-        # Check that the correct data was returned
         expected_data = StackTagsSerializer(mock_tags, many=True).data
         self.assertEqual(response.data, expected_data)
 
@@ -516,20 +488,13 @@ class GetStackOverflowTagsFromSiteTest(APITestCase):
 class GetAllStackOverflowParamsTest(APITestCase):
     def setUp(self):
         self.client = APIClient()
-        # Create some sample StackParams
         StackParams.objects.create(param_name='param1', param_description='value1')
         StackParams.objects.create(param_name='param2', param_description='value2')
 
     def test_get_all_params(self):
-        # Get the URL of the view
-        url = reverse('GetAllStackOverflowParams')  # Replace with the actual name of the view in your URL configuration
-        # Send a GET request to the view
         response = self.client.get(url)
-        # Check that the status code is 200 (OK)
         self.assertEqual(response.status_code, 200)
-        # Check that the number of params returned is correct
         self.assertEqual(len(response.data), 2)
-        # Check that the names and values of the params are correct
         self.assertEqual(response.data[0]['param_name'], 'param1')
         self.assertEqual(response.data[0]['param_description'], 'value1')
         self.assertEqual(response.data[1]['param_name'], 'param2')
@@ -539,10 +504,8 @@ class GetAllStackOverflowParamsTest(APITestCase):
 class GetStackOverflowRoutesTest(APITestCase):
     def setUp(self):
         self.client = APIClient()
-        # Create some sample StackParams
         param1 = StackParams.objects.create(param_name='param1', param_description='value1')
         param2 = StackParams.objects.create(param_name='param2', param_description='value2')
-        # Create some sample StackRoute instances
         route1 = StackRoute.objects.create(route_category='category1', route_query='query1', route='route1')
         route1.params.add(param1)
         route2 = StackRoute.objects.create(route_category='category2', route_query='query2', route='route2')
@@ -550,14 +513,10 @@ class GetStackOverflowRoutesTest(APITestCase):
 
     def test_get_all_routes(self):
         # Get the URL of the view
-        url = reverse('GetStackOverflowRoutes')  # Replace with the actual name of the view in your URL configuration
-        # Send a GET request to the view
+        url = reverse('GetStackOverflowRoutes')
         response = self.client.get(url)
-        # Check that the status code is 200 (OK)
         self.assertEqual(response.status_code, 200)
-        # Check that the number of routes returned is correct
         self.assertEqual(len(response.data), 2)
-        # Check that the route_category, route_query, route, and params of the routes are correct
         self.assertEqual(response.data[0]['route_category'], 'category1')
         self.assertEqual(response.data[0]['route_query'], 'query1')
         self.assertEqual(response.data[0]['route'], 'route1')
@@ -578,15 +537,10 @@ class GetAllStackOverflowFiltersTest(APITestCase):
         StackFilters.objects.create(filter_name='filter2', filter_description='value2')
 
     def test_get_all_filters(self):
-        # Get the URL of the view
-        url = reverse('GetAllStackOverflowFilters')  # Replace with the actual name of the view in your URL configuration
-        # Send a GET request to the view
+        url = reverse('GetAllStackOverflowFilters')
         response = self.client.get(url)
-        # Check that the status code is 200 (OK)
         self.assertEqual(response.status_code, 200)
-        # Check that the number of filters returned is correct
         self.assertEqual(len(response.data), 2)
-        # Check that the filter_name and filter_value of the filters are correct
         self.assertEqual(response.data[0]['filter_name'], 'filter1')
         self.assertEqual(response.data[0]['filter_description'], 'value1')
         self.assertEqual(response.data[1]['filter_name'], 'filter2')
@@ -596,7 +550,6 @@ class GetAllStackOverflowFiltersTest(APITestCase):
 class GetStackOverflowSortMethodsTest(APITestCase):
     def setUp(self):
         self.client = APIClient()
-        # Create some sample StackSortMethods
         StackSortMethods.objects.create(sort_name='method1', sort_description='description1')
         StackSortMethods.objects.create(sort_name='method2', sort_description='description2')
 
@@ -619,20 +572,14 @@ class GetStackOverflowSortMethodsTest(APITestCase):
 class GetStackOverflowOrderMethodsTest(APITestCase):
     def setUp(self):
         self.client = APIClient()
-        # Create some sample StackOrderMethods
         StackOrderMethods.objects.create(order_name='order1', order_description='description1')
         StackOrderMethods.objects.create(order_name='order2', order_description='description2')
 
     def test_get_all_order_methods(self):
-        # Get the URL of the view
-        url = reverse('GetStackOverflowOrderMethods')  # Replace with the actual name of the view in your URL configuration
-        # Send a GET request to the view
+        url = reverse('GetStackOverflowOrderMethods')
         response = self.client.get(url)
-        # Check that the status code is 200 (OK)
         self.assertEqual(response.status_code, 200)
-        # Check that the number of order methods returned is correct
         self.assertEqual(len(response.data), 2)
-        # Check that the order_name and order_description of the order methods are correct
         self.assertEqual(response.data[0]['order_name'], 'order1')
         self.assertEqual(response.data[0]['order_description'], 'description1')
         self.assertEqual(response.data[1]['order_name'], 'order2')
@@ -642,20 +589,14 @@ class GetStackOverflowOrderMethodsTest(APITestCase):
 class GetStackOverflowQuestionDataFieldsTest(APITestCase):
     def setUp(self):
         self.client = APIClient()
-        # Create some sample StackQuestionDataFields
         StackQuestionDataFields.objects.create(data_field_name='field1', data_field_description='description1')
         StackQuestionDataFields.objects.create(data_field_name='field2', data_field_description='description2')
 
     def test_get_all_data_fields(self):
-        # Get the URL of the view
-        url = reverse('GetStackOverflowQuestionDataFields')  # Replace with the actual name of the view in your URL configuration
-        # Send a GET request to the view
+        url = reverse('GetStackOverflowQuestionDataFields')
         response = self.client.get(url)
-        # Check that the status code is 200 (OK)
         self.assertEqual(response.status_code, 200)
-        # Check that the number of data fields returned is correct
         self.assertEqual(len(response.data), 2)
-        # Check that the data_field_name and data_field_description of the data fields are correct
         self.assertEqual(response.data[0]['data_field_name'], 'field1')
         self.assertEqual(response.data[0]['data_field_description'], 'description1')
         self.assertEqual(response.data[1]['data_field_name'], 'field2')
@@ -668,24 +609,16 @@ class InitialiseDatabaseTest(APITestCase):
 
     @patch('search.views.DatabaseInitialisation')
     def test_initialise_database(self, mock_db_init):
-        # Mock the initialiseDatabase method to return True
         mock_db_init.return_value.initialiseDatabase.return_value = True
-        # Get the URL of the view
-        url = reverse('InitialiseDatabase')  # Replace with the actual name of the view in your URL configuration
-        # Send a GET request to the view
+        url = reverse('InitialiseDatabase')
         response = self.client.get(url)
-        # Check that the status code is 200 (OK)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @patch('search.views.DatabaseInitialisation')
     def test_initialise_database_failure(self, mock_db_init):
-        # Mock the initialiseDatabase method to return False
         mock_db_init.return_value.initialiseDatabase.return_value = False
-        # Get the URL of the view
-        url = reverse('InitialiseDatabase')  # Replace with the actual name of the view in your URL configuration
-        # Send a GET request to the view
+        url = reverse('InitialiseDatabase')
         response = self.client.get(url)
-        # Check that the status code is 500 (INTERNAL SERVER ERROR)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -695,16 +628,11 @@ class GetRedditDataTest(APITestCase):
 
     @patch('search.views.searchRedditAndReturnResponse')
     @patch('search.views.insertRedditQuestionToDB')
-    @patch('django_rq.get_queue')  # Mock the django_rq.get_queue function
+    @patch('django_rq.get_queue')
     def test_get_reddit_data(self, mock_get_queue, mock_insert_to_db, mock_search_reddit):
-        # Mock the searchRedditAndReturnResponse function to return a list of dictionaries
         mock_search_reddit.return_value = [{'title': 'title1', 'link': 'link1'}, {'title': 'title2', 'link': 'link2'}]
-        # Get the URL of the view
-        url = reverse('GetRedditData', kwargs={'subred': 'python', 'q': 'exception', 'search_type': 'link', 'limit': '100'})  # Replace with the actual name of the view in your URL configuration
-        # Send a GET request to the view
+        url = reverse('GetRedditData', kwargs={'subred': 'python', 'q': 'exception', 'search_type': 'link', 'limit': '100'})
         response = self.client.get(url)
-        # Check that the status code is 200 (OK)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Check that the data returned is correct
         expected_data = RedditSearchQuerySerializer(mock_search_reddit.return_value, many=True).data
         self.assertEqual(response.data, expected_data)
