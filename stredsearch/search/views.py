@@ -1,9 +1,10 @@
 from multiprocessing import Value, process
+from urllib.error import HTTPError
 
 import django_rq
 import html5lib
 import requests
-from django.http import Http404
+from django.http import *
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,6 +44,8 @@ class GetStackOverflowQuestionsByTag(APIView):
             "tagged": tags,
         }
 
+        print(params_dict)
+
         try:
             processed_filters = processFilters(params_dict)
         except ValueError:
@@ -53,7 +56,8 @@ class GetStackOverflowQuestionsByTag(APIView):
         task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
 
         if type(total_search_result_set) == dict and "error" in total_search_result_set.keys():
-            results = StackSearchErrorSerializer(total_search_result_set).data
+            # results = StackSearchErrorSerializer(total_search_result_set).data
+            raise HTTPError("No results found")
         else:
             results = StackSearchQuerySerializer(total_search_result_set, many=True).data
 
@@ -325,7 +329,7 @@ class GetRedditData(APIView):
 
 
         total_search_result_set = searchRedditAndReturnResponse(q, search_type, limit, subred)
-
+        print(total_search_result_set)
         task_data_set = {"search_term":q, "search_type_set" : search_type, "question_set" : total_search_result_set}
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertRedditQuestionToDB, task_data_set)

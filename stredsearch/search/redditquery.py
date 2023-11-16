@@ -87,7 +87,7 @@ def generateRedditLinkDicts(extracted_tags: list) -> list:
     
     links = []
     for tag in extracted_tags:
-        tag_dict = {"title" : tag['aria-label'], "link" : f"https://www.reddit.com{tag['href']}"}
+        tag_dict = {"question_title" : tag['aria-label'], "question_link" : f"https://www.reddit.com{tag['href']}"}
         links.append(tag_dict)
 
     return links
@@ -149,7 +149,7 @@ def searchRedditAndReturnResponse(q: str, search_type: str, limit: str, subreddi
         
         total_result_set.extend(search_links)
 
-    response = JsonResponse(total_result_set, safe = False)
-    response.status_code = 201
-
-    return response
+    # response = JsonResponse(total_result_set, safe = False)
+    # response.status_code = 201
+    # print(response)
+    return total_result_set

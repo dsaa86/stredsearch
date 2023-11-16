@@ -8,20 +8,31 @@ urlpatterns = [
     # GET data
 
     path("stack/get/question_by_tag/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:tags>/", views.GetStackOverflowQuestionsByTag.as_view(), name="GetStackOverflowQuestionsByTag"),
+
     path("stack/get/related_questions/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:ids>/", views.GetStackOverflowRelatedQuestions.as_view(), name="GetStackOverflowRelatedQuestions"),
+    
     path("stack/get/simple_search/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:nottagged>/<str:tagged>/<str:intitle>/", views.GetStackOverflowSimpleSearch.as_view(), name="GetStackOverflowSimpleSearch"),
     
     path("stack/get/advanced_search/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:q>/<str:accepted>/<str:answers>/<str:body>/<str:closed>/<str:migrated>/<str:notice>/<str:nottagged>/<str:tagged>/<str:title>/<str:user>/<str:url>/<str:views>/<str:wiki>/", views.GetStackOverflowAdvancedSearch.as_view(), name="GetStackOverflowAdvancedSearch"),
     
     path("stack/get/all_tags/", views.GetStackOverflowAllTagsInDB.as_view(), name="GetStackOverflowAllTagsInDB"),
+
     path("stack/get/params/all/", views.GetAllStackOverflowParams.as_view(), name="GetAllStackOverflowParams"),
+
     path("stack/get/params/<str:route>/", views.GetStackOverflowParams.as_view(), name="GetStackOverflowParams"),
+
     path("stack/get/routes/", views.GetStackOverflowRoutes.as_view(), name="GetStackOverflowRoutes"),
+
     path("stack/get/filters/all/", views.GetAllStackOverflowFilters.as_view(), name="GetAllStackOverflowFilters"),
+
     path("stack/get/filters/<str:route>/", views.GetStackOverflowFilters.as_view(), name="GetStackOverflowFilters"),
+
     path("stack/get/sort_methods/", views.GetStackOverflowSortMethods.as_view(), name="GetStackOverflowSortMethods"),
+
     path("stack/get/order_methods/", views.GetStackOverflowOrderMethods.as_view(), name="GetStackOverflowOrderMethods"),
+
     path("stack/get/question_data_fields/", views.GetStackOverflowQuestionDataFields.as_view(), name="GetStackOverflowQuestionDataFields"),
+
     path("stack/get/tags_from_site/<int:pages>/", views.GetStackOverflowTagsFromSite.as_view(), name="GetStackOverflowTagsFromSite"),
 
     # Reddit Routes

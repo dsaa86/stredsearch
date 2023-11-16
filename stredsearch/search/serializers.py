@@ -60,8 +60,8 @@ class StackMetaSerializer(serializers.ModelSerializer):
 
 
 class RedditSearchQuerySerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=500)
-    link = serializers.CharField(max_length=500)
+    question_title = serializers.CharField(max_length=500)
+    question_link = serializers.CharField(max_length=500)
 
 
 class StackSearchQuerySerializer(serializers.Serializer):
