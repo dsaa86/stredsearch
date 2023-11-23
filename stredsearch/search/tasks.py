@@ -3,6 +3,7 @@ from datetime import datetime
 from os import link
 from re import search
 
+from django import db
 from django_rq import job
 from search.exceptionhandlers import UnsuccessfulDBSave
 from search.tasksextendedfunctionality import *
@@ -57,10 +58,14 @@ def insertStackTagsToDB(data: list):
                 number_of_instances_on_so=tag["number_of_instances_on_so"],
             )
     """
+    Question --> Reddit Question --> StredSearchQuestion
 
-    check is subreddit exists
-    check if question exists...unlikely!
-    get search type
+    1. Search Type --> RedditSearchType == search type
+    2. Created On & Updated On == datetime.now()
+    3. Search Term  --> Search Terms --> question
+    4. Link == Link
+    4. Title == Title
+    5. Times Returned == 1
 
     create question set and add to db
 
@@ -70,22 +75,65 @@ def insertStackTagsToDB(data: list):
 
 @job
 def insertRedditQuestionToDB(data: dict) -> bool:
-    search_term = {"q": data["search_term"]}
+    search_term = data["search_term"]
     question_set = data["question_set"]
     type_set = data["search_type_set"].split(",")
+    subreddits = data["subreddit"].split(",")
 
     print("SEARCH TERM: ", search_term)
     print("QUESTION SET: ", question_set)
     print("TYPE SET: ", type_set)
 
-    # db_search_term = retrieveSearchTermFromDB(search_term)
-    # for question in question_set:
-    #     if not createOrUpdateRedditQuestion(
-    #         question["link"], question["title"], db_search_term
-    #     ):
-    #         raise UnsuccessfulDBSave
+    db_subreddit_list = []
+    for subreddit in subreddits:
+        if RedditSubreddit.objects.filter(subreddit_name=subreddit).exists():
+            db_subreddit_list.append(
+                RedditSubreddit.objects.get(subreddit_name=subreddit)
+            )
+        else:
+            db_subreddit_list.append(
+                RedditSubreddit.objects.get_or_create(
+                    subreddit_name=subreddit,
+                )
+            )
 
-    #     if not addSearchTypeToRedditQuestion(type_set, question["link"]):
-    #         raise UnsuccessfulDBSave
+    # Get Search Type
+    db_search_type_list = []
+    for search_type in type_set:
+        if RedditSearchType.objects.filter(search_type=search_type).exists():
+            db_search_type_list.append(
+                RedditSearchType.objects.get(search_type=search_type)
+            )
+        else:
+            db_search_type_list.append(
+                RedditSearchType.objects.get_or_create(search_type=search_type)
+            )
+
+    # Get SearchTerm
+    db_search_term = None
+    if SearchTerms.objects.filter(search_term=search_term).exists():
+        db_search_term = SearchTerms.objects.get(search_term=search_term)
+    else:
+        db_search_term = SearchTerms.objects.get_or_create(search_term=search_term)
+
+    for question in question_set:
+        if RedditQuestion.objects.filter(link=question["question_link"]).exists():
+            db_question_instance = RedditQuestion.objects.get(
+                link=question["question_link"]
+            )
+            db_question_instance.times_returned_as_search_result += 1
+        else:
+            db_question_instance = RedditQuestion.objects.create(
+                link=question["question_link"],
+                title=question["question_title"],
+                times_returned_as_search_result=1,
+            )
+            db_question_instance.search_term.add(db_search_term)
+            db_question_instance.search_type.set(db_search_type_list)
+            db_question_instance.subreddit.set(db_subreddit_list)
+        try:
+            db_question_instance.save()
+        except Exception as e:
+            raise UnsuccessfulDBSave(f"Unsuccessful DB save: {e}")
 
     return True

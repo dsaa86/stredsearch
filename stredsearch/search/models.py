@@ -117,15 +117,16 @@ class RedditSearchType(models.Model):
         return self.search_type
 
 
-class RedditQuestion(StredSearchQuestion):
-    search_type = models.ManyToManyField(RedditSearchType, blank=True)
-
-    def __str__(self) -> str:
-        return self.title
-
-
 class RedditSubreddit(models.Model):
     subreddit_name = models.CharField(max_length=100, blank=False, unique=True)
 
     def __str__(self) -> str:
         return self.subreddit_name
+
+
+class RedditQuestion(StredSearchQuestion):
+    search_type = models.ManyToManyField(RedditSearchType, blank=True)
+    subreddit = models.ManyToManyField(RedditSubreddit, blank=True)
+
+    def __str__(self) -> str:
+        return self.title
