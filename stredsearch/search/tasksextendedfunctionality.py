@@ -5,8 +5,8 @@ from re import search
 import pytz
 
 from .models import (
-    RedditQuestion,
     RedditSearchType,
+    RedditSubreddit,
     SearchTerms,
     StackQuestion,
     StackTags,
@@ -218,35 +218,48 @@ def sanitiseTagStringToList(tag_string: str) -> list:
     return tag_string.split(", ")
 
 
-def createOrUpdateRedditQuestion(link: str, title: str, db_search_term) -> bool:
-    db_question_instance = None
-    if RedditQuestion.objects.filter(link=link).exists():
-        db_question_instance = RedditQuestion.objects.get(link=link)
-        db_question_instance.times_returned_as_search_result += 1
-    else:
-        db_question_instance = RedditQuestion.objects.create(
-            link=link, title=title, times_returned_as_search_result=1
-        )
-        db_question_instance.search_term.add(db_search_term)
-    try:
-        db_question_instance.save()
-        return True
-    except Exception as e:
-        return False
+def getRedditSubredditList(subreddits_string: str) -> list:
+    subreddit_list_from_param = subreddits_string.split(",")
+    db_subreddit_list = []
 
-
-def addSearchTypeToRedditQuestion(type_set: list, link: str) -> bool:
-    for search_type in type_set:
-        db_question_instance = RedditQuestion.objects.filter(link=link)
-        db_type = None
-        if RedditSearchType.objects.filter(search_type=search_type).exists():
-            db_type = RedditSearchType.objects.get(search_type=search_type)
+    for subreddit in subreddit_list_from_param:
+        if RedditSubreddit.objects.filter(subreddit_name=subreddit).exists():
+            db_subreddit_list.append(
+                RedditSubreddit.objects.get(subreddit_name=subreddit)
+            )
         else:
-            db_type = RedditSearchType.objects.create(search_type=search_type)
+            db_subreddit_list.append(
+                RedditSubreddit.objects.get_or_create(
+                    subreddit_name=subreddit,
+                )
+            )
 
-        db_question_instance.search_type.add(db_type)
-        try:
-            db_question_instance.save()
-        except Exception as e:
-            return False
-    return True
+    return db_subreddit_list
+
+
+def getRedditSearchTypeList(search_type_string: str) -> list:
+    type_list = search_type_string.split(",")
+    db_search_type_list = []
+    for search_type in type_list:
+        if RedditSearchType.objects.filter(search_type=search_type).exists():
+            db_search_type_list.append(
+                RedditSearchType.objects.get(search_type=search_type)
+            )
+        else:
+            db_search_type_list.append(
+                RedditSearchType.objects.get_or_create(search_type=search_type)
+            )
+
+    return db_search_type_list
+
+
+def getRedditSearchTerm(search_term_string: str) -> SearchTerms:
+    db_search_term = None
+    if SearchTerms.objects.filter(search_term=search_term_string).exists():
+        db_search_term = SearchTerms.objects.get(search_term=search_term_string)
+    else:
+        db_search_term = SearchTerms.objects.get_or_create(
+            search_term=search_term_string
+        )
+
+    return db_search_term

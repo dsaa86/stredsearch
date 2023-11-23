@@ -5,7 +5,7 @@ import django_rq
 import html5lib
 import requests
 from django.http import *
-from rest_framework import status
+from rest_framework import filters, generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from search.databaseinitialisation import DatabaseInitialisation
@@ -476,3 +476,17 @@ class GetRedditData(APIView):
         results = RedditSearchQuerySerializer(total_search_result_set, many=True).data
 
         return Response(results)
+
+
+class StackSearchResponseView(generics.ListCreateAPIView):
+    search_fields = ["title", "tags__tag_name"]
+    filter_backends = (filters.SearchFilter,)
+    queryset = StackQuestion.objects.all()
+    serializer_class = StackSearchQuerySerializer
+
+
+class RedditSearchResponseView(generics.ListCreateAPIView):
+    search_fields = ["title", "subreddit__subreddit_name"]
+    filter_backends = (filters.SearchFilter,)
+    queryset = RedditQuestion.objects.all()
+    serializer_class = RedditSearchQuerySerializerForFiltering

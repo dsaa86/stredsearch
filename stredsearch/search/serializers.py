@@ -67,6 +67,12 @@ class RedditSearchQuerySerializer(serializers.Serializer):
     question_link = serializers.CharField(max_length=500)
 
 
+class RedditSearchQuerySerializerForFiltering(serializers.Serializer):
+    link = serializers.CharField(max_length=500)
+    title = serializers.CharField(max_length=500)
+    subreddit = serializers.CharField(max_length=500)
+
+
 class StackSearchQuerySerializer(serializers.Serializer):
     tags = serializers.CharField()
     is_answered = serializers.BooleanField()
