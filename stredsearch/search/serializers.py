@@ -7,15 +7,18 @@ class StackTagsSerializer(serializers.ModelSerializer):
         model = StackTags
         fields = "__all__"
 
+
 class StackParamsSerializer(serializers.ModelSerializer):
     class Meta:
         model = StackParams
         fields = "__all__"
 
+
 class StackFiltersSerializer(serializers.ModelSerializer):
     class Meta:
         model = StackFilters
         fields = "__all__"
+
 
 class StackSortMethodsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,11 +31,11 @@ class StackOrderMethodsSerializer(serializers.ModelSerializer):
         model = StackOrderMethods
         fields = "__all__"
 
+
 class StackQuestionDataFieldsSerializer(serializers.ModelSerializer):
     class Meta:
         model = StackQuestionDataFields
         fields = "__all__"
-
 
 
 class StackQuestionSerializer(serializers.ModelSerializer):
@@ -94,7 +97,7 @@ class StackCategoriesSerializer(serializers.Serializer):
 class StackRouteSerializer(serializers.ModelSerializer):
     class Meta:
         model = StackRoute
-        fields = ['route_category', 'route_query', 'route', 'params']
+        fields = ["route_category", "route_query", "route", "params"]
         depth = 1
 
 

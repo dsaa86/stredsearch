@@ -4,30 +4,74 @@ from re import search
 
 import pytz
 
-from .models import (RedditQuestion, RedditSearchType, SearchTerms,
-                     StackQuestion, StackTags, StackUser)
+from .models import (
+    RedditQuestion,
+    RedditSearchType,
+    SearchTerms,
+    StackQuestion,
+    StackTags,
+    StackUser,
+)
 
 
 def updateQuestionParamsInDB(question):
     database_instance = StackQuestion.objects.get(question_id=question["question_id"])
-    logging.debug(f"updateQuestionParamsInDB - updating question {database_instance.question_id}")
-    if database_instance.last_activity_date.tzinfo is None or database_instance.last_activity_date.tzinfo.utcoffset(database_instance.last_activity_date) is None:
-        database_instance.last_activity_date = pytz.utc.localize(database_instance.last_activity_date)
+    logging.debug(
+        f"updateQuestionParamsInDB - updating question {database_instance.question_id}"
+    )
+    if (
+        database_instance.last_activity_date.tzinfo is None
+        or database_instance.last_activity_date.tzinfo.utcoffset(
+            database_instance.last_activity_date
+        )
+        is None
+    ):
+        database_instance.last_activity_date = pytz.utc.localize(
+            database_instance.last_activity_date
+        )
 
-    if database_instance.last_edit_date.tzinfo is None or database_instance.last_edit_date.tzinfo.utcoffset(database_instance.last_edit_date) is None:
-        database_instance.last_edit_date = pytz.utc.localize(database_instance.last_edit_date)
+    if (
+        database_instance.last_edit_date.tzinfo is None
+        or database_instance.last_edit_date.tzinfo.utcoffset(
+            database_instance.last_edit_date
+        )
+        is None
+    ):
+        database_instance.last_edit_date = pytz.utc.localize(
+            database_instance.last_edit_date
+        )
 
-    if question["last_activity_date"].tzinfo is None or question["last_activity_date"].tzinfo.utcoffset(question["last_activity_date"]) is None:
-        question["last_activity_date"] = pytz.utc.localize(question["last_activity_date"])
+    if (
+        question["last_activity_date"].tzinfo is None
+        or question["last_activity_date"].tzinfo.utcoffset(
+            question["last_activity_date"]
+        )
+        is None
+    ):
+        question["last_activity_date"] = pytz.utc.localize(
+            question["last_activity_date"]
+        )
 
-    if question["last_edit_date"].tzinfo is None or question["last_edit_date"].tzinfo.utcoffset(question["last_edit_date"]) is None:
+    if (
+        question["last_edit_date"].tzinfo is None
+        or question["last_edit_date"].tzinfo.utcoffset(question["last_edit_date"])
+        is None
+    ):
         question["last_edit_date"] = pytz.utc.localize(question["last_edit_date"])
 
-    database_instance.last_activity_date = max(database_instance.last_activity_date, question["last_activity_date"])
-    database_instance.last_edit_date = max(database_instance.last_edit_date, question["last_edit_date"])
+    database_instance.last_activity_date = max(
+        database_instance.last_activity_date, question["last_activity_date"]
+    )
+    database_instance.last_edit_date = max(
+        database_instance.last_edit_date, question["last_edit_date"]
+    )
     database_instance.is_answered = question["is_answered"]
-    database_instance.view_count = max(database_instance.view_count, question["view_count"])
-    database_instance.answer_count = max(database_instance.answer_count, question["answer_count"])
+    database_instance.view_count = max(
+        database_instance.view_count, question["view_count"]
+    )
+    database_instance.answer_count = max(
+        database_instance.answer_count, question["answer_count"]
+    )
     database_instance.score = max(database_instance.score, question["score"])
     logging.debug("updateQuestionParamsInDB - question params updated")
     if "q" in question.keys():
@@ -45,7 +89,7 @@ def retrieveUserFromDB(user_id, display_name):
         return StackUser.objects.create(user_id=user_id, display_name=display_name)
 
 
-def retrieveTagsFromDB(tags:list) -> list:
+def retrieveTagsFromDB(tags: list) -> list:
     logging.basicConfig(level=logging.DEBUG)
     logging.debug("FUNCTION: retrieveTagsFromDB")
     if not isinstance(tags, list):
@@ -72,7 +116,7 @@ def retrieveSearchTermFromDB(question):
         if SearchTerms.objects.filter(search_term=question["q"]).count() > 0:
             return SearchTerms.objects.get(search_term=question["q"])
         return SearchTerms.objects.create(search_term=question["q"])
-    
+
     if SearchTerms.objects.filter(search_term="N/A").count() > 0:
         return SearchTerms.objects.get(search_term="N/A")
     return SearchTerms.objects.create(search_term="N/A")
@@ -90,7 +134,7 @@ def createNewStackQuestionInDB(question, user, tags, search_terms):
         last_edit_date=question["last_edit_date"],
         question_id=question["question_id"],
         link=question["link"],
-        title=question["title"]
+        title=question["title"],
     )
     database_question.search_term.set(search_terms)
     logging.debug(f"{tags}")
@@ -106,7 +150,16 @@ def createNewStackQuestionInDB(question, user, tags, search_terms):
 
 def createStubsForMissingData(question):
     stub_datetime = datetime.now()
-    stub_datetime.replace(year=2000, month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=pytz.timezone("Asia/Dubai"))
+    stub_datetime.replace(
+        year=2000,
+        month=1,
+        day=1,
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+        tzinfo=pytz.timezone("Asia/Dubai"),
+    )
     if "creation_date" not in question.keys():
         question["creation_date"] = stub_datetime
     if "last_activity_date" not in question.keys():
@@ -128,40 +181,59 @@ def createStubsForMissingData(question):
 
 
 def removeNaiveTzFromDatetime(question):
+    if "last_activity_date" in question.keys() and (
+        question["last_activity_date"].tzinfo is None
+        or question["last_activity_date"].tzinfo.utcoffset(
+            question["last_activity_date"]
+        )
+        is None
+    ):
+        question["last_activity_date"] = pytz.utc.localize(
+            question["last_activity_date"]
+        )
 
-    if "last_activity_date" in question.keys() and (question["last_activity_date"].tzinfo is None or question["last_activity_date"].tzinfo.utcoffset(question["last_activity_date"]) is None):
-        question["last_activity_date"] = pytz.utc.localize(question["last_activity_date"])
-
-    if "last_edit_date" in question.keys() and (question["last_edit_date"].tzinfo is None or question["last_edit_date"].tzinfo.utcoffset(question["last_edit_date"]) is None):
+    if "last_edit_date" in question.keys() and (
+        question["last_edit_date"].tzinfo is None
+        or question["last_edit_date"].tzinfo.utcoffset(question["last_edit_date"])
+        is None
+    ):
         question["last_edit_date"] = pytz.utc.localize(question["last_edit_date"])
 
-    if "creation_date" in question.keys() and (question["last_activity_date"].tzinfo is None or question["last_activity_date"].tzinfo.utcoffset(question["last_activity_date"]) is None):
+    if "creation_date" in question.keys() and (
+        question["last_activity_date"].tzinfo is None
+        or question["last_activity_date"].tzinfo.utcoffset(
+            question["last_activity_date"]
+        )
+        is None
+    ):
         question["creation_date"] = pytz.utc.localize(question["creation_date"])
 
     return question
 
 
-def sanitiseTagStringToList(tag_string:str) -> list:
-
+def sanitiseTagStringToList(tag_string: str) -> list:
     if not isinstance(tag_string, str):
         raise TypeError("tag_string must be of type str")
 
     return tag_string.split(", ")
 
 
-def createOrUpdateRedditQuestion(link:str, title:str, db_search_term) -> bool:
+def createOrUpdateRedditQuestion(link: str, title: str, db_search_term) -> bool:
     db_question_instance = None
     if RedditQuestion.objects.filter(link=link).exists():
         db_question_instance = RedditQuestion.objects.get(link=link)
         db_question_instance.times_returned_as_search_result += 1
     else:
-        db_question_instance = RedditQuestion.objects.create(link=link, title=title, times_returned_as_search_result=1)
+        db_question_instance = RedditQuestion.objects.create(
+            link=link, title=title, times_returned_as_search_result=1
+        )
         db_question_instance.search_term.add(db_search_term)
     try:
         db_question_instance.save()
         return True
     except Exception as e:
         return False
+
 
 def addSearchTypeToRedditQuestion(type_set: list, link: str) -> bool:
     for search_type in type_set:
