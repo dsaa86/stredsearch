@@ -1,11 +1,15 @@
 from multiprocessing import Value, process
+from re import A
 from urllib.error import HTTPError
 
 import django_rq
 import html5lib
 import requests
+from django.contrib.auth.models import User
 from django.http import *
 from rest_framework import filters, generics, status
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from search.databaseinitialisation import DatabaseInitialisation
@@ -19,6 +23,21 @@ from search.tasks import (
     insertStackQuestionsToDB,
     insertStackTagsToDB,
 )
+
+
+class UserDetailView(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (AllowAny,)
+
+    def get(self, request, *args, **kwargs):
+        user = User.objects.get(id=request.user.id)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+
+class RegisterUserView(generics.CreateAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = RegisterSerializer
 
 
 class GetStackOverflowQuestionsByTag(APIView):

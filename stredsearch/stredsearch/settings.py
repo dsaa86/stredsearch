@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "search",
     "django_rq",
     "corsheaders",
+    "rest_framework.authtoken",
 ]
 
 MIDDLEWARE = [

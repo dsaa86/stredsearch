@@ -100,6 +100,8 @@ urlpatterns = [
         views.RedditSearchResponseView.as_view(),
         name="RedditSearch",
     ),
+    path("get-details/", views.UserDetailView.as_view(), name="UserDetail"),
+    path("register/", views.RegisterUserView.as_view(), name="RegisterUser"),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
