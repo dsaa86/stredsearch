@@ -6,22 +6,22 @@ urlpatterns = [
     # Stack Overflow Routes
     # GET data
     path(
-        "stack/get/question_by_tag/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:tags>/",
+        "stack/get/question_by_tag/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:tags>/<str:token>/",
         views.GetStackOverflowQuestionsByTag.as_view(),
         name="GetStackOverflowQuestionsByTag",
     ),
     path(
-        "stack/get/related_questions/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:ids>/",
+        "stack/get/related_questions/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:ids>/<str:token>/",
         views.GetStackOverflowRelatedQuestions.as_view(),
         name="GetStackOverflowRelatedQuestions",
     ),
     path(
-        "stack/get/simple_search/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:nottagged>/<str:tagged>/<str:intitle>/",
+        "stack/get/simple_search/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:nottagged>/<str:tagged>/<str:intitle>/<str:token>/",
         views.GetStackOverflowSimpleSearch.as_view(),
         name="GetStackOverflowSimpleSearch",
     ),
     path(
-        "stack/get/advanced_search/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:q>/<str:accepted>/<str:answers>/<str:body>/<str:closed>/<str:migrated>/<str:notice>/<str:nottagged>/<str:tagged>/<str:title>/<str:user>/<str:url>/<str:views>/<str:wiki>/",
+        "stack/get/advanced_search/<str:page>/<str:pagesize>/<str:fromdate>/<str:todate>/<str:order>/<str:sort>/<str:q>/<str:accepted>/<str:answers>/<str:body>/<str:closed>/<str:migrated>/<str:notice>/<str:nottagged>/<str:tagged>/<str:title>/<str:user>/<str:url>/<str:views>/<str:wiki>/<str:token>/",
         views.GetStackOverflowAdvancedSearch.as_view(),
         name="GetStackOverflowAdvancedSearch",
     ),
@@ -80,7 +80,7 @@ urlpatterns = [
     # path("reddit/get/sub_reddits/", views.GetSubReddits.as_view()),
     # path("reddit/get/query_types", views.GetRedditQueryTypes.as_view()),
     path(
-        "reddit/get/query/<str:search_type>/<str:subred>/<str:q>/<str:limit>/",
+        "reddit/get/query/<str:search_type>/<str:subred>/<str:q>/<str:limit>/<str:token>/",
         views.GetRedditData.as_view(),
         name="GetRedditData",
     ),
@@ -102,6 +102,11 @@ urlpatterns = [
     ),
     path("get-details/", views.UserDetailView.as_view(), name="UserDetail"),
     path("register/", views.RegisterUserView.as_view(), name="RegisterUser"),
+    path(
+        "searchhistory/<str:token>/",
+        views.SearchHistoryView.as_view(),
+        name="SearchHistory",
+    ),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

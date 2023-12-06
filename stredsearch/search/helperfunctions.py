@@ -6,10 +6,12 @@ from django.utils.dateparse import parse_datetime
 
 
 def removeBlankParams(keys_to_delete: list, params_dict: dict) -> dict:
-        for key in keys_to_delete:
-            del params_dict[key]
+    for key in keys_to_delete:
+        del params_dict[key]
 
-        return params_dict
+    return params_dict
+
+
 def processFilters(params_dict: dict) -> dict:
     keys_to_delete = []
 
@@ -20,11 +22,14 @@ def processFilters(params_dict: dict) -> dict:
             keys_to_delete.append(key)
 
         # Stack Exchange expects semi-colon delimited list
-        if key in ["nottagged","tagged", "ids"]:
+        if key in ["nottagged", "tagged", "ids"]:
             params_dict[key] = value.replace(",", ";")
 
         # These elems must be int
-        if key in ["answers", "views", "page", "pagesize", "answers", "user", "views"] and value != " ":
+        if (
+            key in ["answers", "views", "page", "pagesize", "answers", "user", "views"]
+            and value != " "
+        ):
             invalid_chars_in_value = re.findall("[^0-9]", value)
             if len(invalid_chars_in_value) > 0:
                 raise ValueError(f"Invalid value for {key}, none-int value provided")
@@ -32,7 +37,7 @@ def processFilters(params_dict: dict) -> dict:
             try:
                 params_dict[key] = int(params_dict[key])
             except ValueError:
-                return {"error": { "ValueError" : f"Invalid value for {key}" }}
+                return {"error": {"ValueError": f"Invalid value for {key}"}}
 
     params_dict = removeBlankParams(keys_to_delete, params_dict)
 
@@ -40,7 +45,6 @@ def processFilters(params_dict: dict) -> dict:
 
 
 def convertListToString(list_to_convert: list, delimiter: str = None) -> str:
-
     if not isinstance(list_to_convert, list):
         raise TypeError("list_to_convert must be of type list")
     if delimiter != None and not isinstance(delimiter, str):
@@ -58,7 +62,6 @@ def convertListToString(list_to_convert: list, delimiter: str = None) -> str:
 
 
 def convertMSToDateTime(ms_value: int) -> object:
-
     if not isinstance(ms_value, int):
         raise TypeError("ms_value must be of type int")
 

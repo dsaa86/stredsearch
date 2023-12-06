@@ -20,9 +20,15 @@ from search.serializers import *
 from search.stackquery import getTagsFromSO, queryStackOverflow
 from search.tasks import (
     insertRedditQuestionToDB,
+    insertSearchToUserProfile,
     insertStackQuestionsToDB,
     insertStackTagsToDB,
 )
+
+
+class SearchHistoryView(APIView):
+    def get(self, request, token):
+        user = User.objects.get(auth_token=token)
 
 
 class UserDetailView(APIView):
@@ -63,9 +69,19 @@ class GetStackOverflowQuestionsByTag(APIView):
             return True
 
     def get(
-        self, request, page, pagesize, fromdate, todate, order, sort, tags, format=None
+        self,
+        request,
+        page,
+        pagesize,
+        fromdate,
+        todate,
+        order,
+        sort,
+        tags,
+        token,
+        format=None,
     ):
-        for elem in [page, pagesize, fromdate, todate, order, sort, tags]:
+        for elem in [page, pagesize, fromdate, todate, order, sort, tags, token]:
             try:
                 self.checkObjAndRaiseTypeError(elem, str, "Invalid type for parameter")
             except TypeError:
@@ -81,8 +97,6 @@ class GetStackOverflowQuestionsByTag(APIView):
             "tagged": tags,
         }
 
-        print(params_dict)
-
         try:
             processed_filters = processFilters(params_dict)
         except ValueError:
@@ -93,6 +107,11 @@ class GetStackOverflowQuestionsByTag(APIView):
         )
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
+        if token != " ":
+            # enqueue task to commit search to db for user
+            task_queue.enqueue(
+                insertSearchToUserProfile, token, tags, total_search_result_set, {}
+            )
 
         if (
             type(total_search_result_set) == dict
@@ -124,7 +143,17 @@ class GetStackOverflowRelatedQuestions(APIView):
             return True
 
     def get(
-        self, request, page, pagesize, fromdate, todate, order, sort, ids, format=None
+        self,
+        request,
+        page,
+        pagesize,
+        fromdate,
+        todate,
+        order,
+        sort,
+        ids,
+        token,
+        format=None,
     ):
         for elem in [page, pagesize, fromdate, todate, order, sort, ids]:
             try:
@@ -155,6 +184,11 @@ class GetStackOverflowRelatedQuestions(APIView):
 
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
+        if token != " ":
+            # enqueue task to commit search to db for user
+            task_queue.enqueue(
+                insertSearchToUserProfile, token, ids, total_search_result_set, {}
+            )
 
         if (
             type(total_search_result_set) == dict
@@ -196,6 +230,7 @@ class GetStackOverflowSimpleSearch(APIView):
         nottagged,
         tagged,
         intitle,
+        token,
         format=None,
     ):
         for elem in [
@@ -243,6 +278,11 @@ class GetStackOverflowSimpleSearch(APIView):
 
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
+        if token != " ":
+            # enqueue task to commit search to db for user
+            task_queue.enqueue(
+                insertSearchToUserProfile, token, tagged, total_search_result_set, {}
+            )
 
         if (
             type(total_search_result_set) == dict
@@ -295,6 +335,7 @@ class GetStackOverflowAdvancedSearch(APIView):
         url,
         views,
         wiki,
+        token,
         format=None,
     ):
         for elem in [
@@ -384,6 +425,11 @@ class GetStackOverflowAdvancedSearch(APIView):
 
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertStackQuestionsToDB, total_search_result_set)
+        if token != " ":
+            # enqueue task to commit search to db for user
+            task_queue.enqueue(
+                insertSearchToUserProfile, token, q, total_search_result_set, {}
+            )
 
         if (
             type(total_search_result_set) == dict
@@ -480,7 +526,7 @@ class InitialiseDatabase(APIView):
 
 
 class GetRedditData(APIView):
-    def get(self, request, subred, q, search_type, limit, format=None):
+    def get(self, request, subred, q, search_type, limit, token, format=None):
         # PARAMS STRUCTURE
         # terms = {
         #     'q' : 'exception raised during for loop python',
@@ -506,6 +552,11 @@ class GetRedditData(APIView):
         }
         task_queue = django_rq.get_queue("default", autocommit=True, is_async=True)
         task_queue.enqueue(insertRedditQuestionToDB, task_data_set)
+        if token != " ":
+            # enqueue task to commit search to db for user
+            task_queue.enqueue(
+                insertSearchToUserProfile, token, q, {}, total_search_result_set
+            )
 
         results = RedditSearchQuerySerializer(total_search_result_set, many=True).data
 

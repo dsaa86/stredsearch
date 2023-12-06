@@ -1,6 +1,7 @@
 from typing import Any
 
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class StackParams(models.Model):
@@ -130,3 +131,12 @@ class RedditQuestion(StredSearchQuestion):
 
     def __str__(self) -> str:
         return self.title
+
+
+class UserSearchResponses(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    search_term = models.ForeignKey(
+        SearchTerms, on_delete=models.PROTECT, blank=True, null=True
+    )
+    stack_responses = models.ManyToManyField(StackQuestion)
+    reddit_responses = models.ManyToManyField(RedditQuestion)

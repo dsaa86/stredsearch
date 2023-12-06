@@ -5,10 +5,68 @@ from re import search
 
 from django import db
 from django_rq import job
+from rest_framework.authtoken.models import Token
 from search.exceptionhandlers import UnsuccessfulDBSave
 from search.tasksextendedfunctionality import *
 
 from .models import *
+
+
+@job
+def insertSearchToUserProfile(
+    user_token: str,
+    search_term: str,
+    stack_question_set: dict,
+    reddit_question_set: dict,
+):
+    try:
+        token = Token.objects.get(key=user_token)
+        user = token.user
+
+        user_search_response_db_entry = None
+        if search_term != "":
+            search_term_db_entry = SearchTerms.objects.get_or_create(
+                search_term=search_term
+            )[0]
+
+            user_search_response_db_entry = UserSearchResponses.objects.get_or_create(
+                user=user, search_term=search_term_db_entry
+            )[0]
+        else:
+            user_search_response_db_entry = UserSearchResponses.objects.get_or_create(
+                user=user
+            )[0]
+
+        print(user_search_response_db_entry)
+        if len(stack_question_set) > 0:
+            question_entries = []
+            for question in stack_question_set:
+                if StackQuestion.objects.filter(
+                    question_id=question["question_id"]
+                ).exists():
+                    question_entries.append(
+                        StackQuestion.objects.get(question_id=question["question_id"])
+                    )
+
+            user_search_response_db_entry.stack_responses.add(*question_entries)
+            user_search_response_db_entry.save()
+
+        if len(reddit_question_set) > 0:
+            print(reddit_question_set)
+            question_entries = []
+            for question in reddit_question_set:
+                if RedditQuestion.objects.filter(
+                    link=question["question_link"]
+                ).exists():
+                    question_entries.append(
+                        RedditQuestion.objects.get(link=question["question_link"])
+                    )
+
+            user_search_response_db_entry.reddit_responses.add(*question_entries)
+            user_search_response_db_entry.save()
+
+    except Token.DoesNotExist:
+        return {"error": "Token.DoesNotExist"}
 
 
 @job
