@@ -26,9 +26,22 @@ from search.tasks import (
 )
 
 
+class RetrieveSearchResults(APIView):
+    def get(self, request, token, term):
+        user = User.objects.get(auth_token=token)
+        search_history = UserSearchResponses.objects.filter(
+            user=user, search_term__search_term=term
+        )
+        results = RetrieveSearchResultsSerializer(search_history, many=True)
+        return Response(results.data)
+
+
 class SearchHistoryView(APIView):
     def get(self, request, token):
         user = User.objects.get(auth_token=token)
+        search_history = UserSearchResponses.objects.filter(user=user)
+        results = UserSearchResponsesSerializer(search_history, many=True)
+        return Response(results.data)
 
 
 class UserDetailView(APIView):

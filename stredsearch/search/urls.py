@@ -107,6 +107,11 @@ urlpatterns = [
         views.SearchHistoryView.as_view(),
         name="SearchHistory",
     ),
+    path(
+        "searchhistory/retrieve-search-results/<str:token>/<str:term>/",
+        views.RetrieveSearchResults.as_view(),
+        name="RetrieveSearchResults",
+    ),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

@@ -8,6 +8,72 @@ from rest_framework.validators import UniqueValidator
 from search.models import *
 
 
+class RedditSearchTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RedditSearchType
+        fields = "__all__"
+
+
+class RedditSubredditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RedditSubreddit
+        fields = "__all__"
+
+
+class RedditQuestionSerializer(serializers.ModelSerializer):
+    search_type = RedditSearchTypeSerializer(read_only=True)
+    subreddit = RedditSubredditSerializer(read_only=True)
+
+    class Meta:
+        model = RedditQuestion
+        fields = "__all__"
+
+
+class StackOwnerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackUser
+        fields = "__all__"
+
+
+class StackQuestionTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StackTags
+        fields = "__all__"
+
+
+class StackQuestionSerializer(serializers.ModelSerializer):
+    owner = StackOwnerSerializer(read_only=True)
+    tags = StackQuestionTagSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = StackQuestion
+        fields = "__all__"
+
+
+class SearchTermsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SearchTerms
+        fields = ["search_term"]
+
+
+class RetrieveSearchResultsSerializer(serializers.ModelSerializer):
+    search_term = SearchTermsSerializer(read_only=True)
+    stack_responses = StackQuestionSerializer(read_only=True, many=True)
+    reddit_responses = RedditQuestionSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = UserSearchResponses
+        fields = "__all__"
+
+
+class UserSearchResponsesSerializer(serializers.ModelSerializer):
+    search_term = SearchTermsSerializer(read_only=True)
+
+    class Meta:
+        model = UserSearchResponses
+        fields = ["search_term", "search_term"]
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
