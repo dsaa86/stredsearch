@@ -4,6 +4,7 @@ from os import link
 from re import search
 
 from django import db
+from django.contrib.auth.models import User
 from django_rq import job
 from rest_framework.authtoken.models import Token
 from search.exceptionhandlers import UnsuccessfulDBSave
@@ -20,8 +21,9 @@ def insertSearchToUserProfile(
     reddit_question_set: dict,
 ):
     try:
-        token = Token.objects.get(key=user_token)
-        user = token.user
+        user = User.objects.get(auth_token=user_token)
+        # token = Token.objects.get(key=user_token)
+        # user = token.user
 
         user_search_response_db_entry = None
         if search_term != "":
@@ -32,12 +34,13 @@ def insertSearchToUserProfile(
             user_search_response_db_entry = UserSearchResponses.objects.get_or_create(
                 user=user, search_term=search_term_db_entry
             )[0]
+            print("Properly formatted search element")
         else:
             user_search_response_db_entry = UserSearchResponses.objects.get_or_create(
                 user=user
             )[0]
+            print("No search element")
 
-        print(user_search_response_db_entry)
         if len(stack_question_set) > 0:
             question_entries = []
             for question in stack_question_set:
@@ -52,7 +55,6 @@ def insertSearchToUserProfile(
             user_search_response_db_entry.save()
 
         if len(reddit_question_set) > 0:
-            print(reddit_question_set)
             question_entries = []
             for question in reddit_question_set:
                 if RedditQuestion.objects.filter(
@@ -156,7 +158,8 @@ def insertRedditQuestionToDB(data: dict) -> bool:
 
         try:
             db_question_instance.save()
-            return True
+            # print(db_question_instance)
         except Exception as e:
             raise UnsuccessfulDBSave(f"Unsuccessful DB save: {e}")
             return False
+    return True

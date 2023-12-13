@@ -29,9 +29,12 @@ from search.tasks import (
 class RetrieveSearchResults(APIView):
     def get(self, request, token, term):
         user = User.objects.get(auth_token=token)
-        search_history = UserSearchResponses.objects.filter(
-            user=user, search_term__search_term=term
-        )
+        try:
+            search_history = UserSearchResponses.objects.filter(
+                user=user, search_term__search_term=term
+            )
+        except UserSearchResponses.DoesNotExist:
+            raise Http404("No search history found")
         results = RetrieveSearchResultsSerializer(search_history, many=True)
         return Response(results.data)
 
@@ -67,7 +70,6 @@ class RegisterUserView(generics.CreateAPIView):
                 serializer.data, status=status.HTTP_201_CREATED, headers=headers
             )
         else:
-            print(serializer.errors)
             errors = serializer.errors
             if ("email" in errors) or ("username" in errors):
                 return Response(errors, status=status.HTTP_409_CONFLICT)
@@ -556,7 +558,7 @@ class GetRedditData(APIView):
         total_search_result_set = searchRedditAndReturnResponse(
             q, search_type, limit, subred
         )
-        print(total_search_result_set)
+
         task_data_set = {
             "search_term": q,
             "search_type_set": search_type,

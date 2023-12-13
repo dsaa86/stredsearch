@@ -21,8 +21,8 @@ class RedditSubredditSerializer(serializers.ModelSerializer):
 
 
 class RedditQuestionSerializer(serializers.ModelSerializer):
-    search_type = RedditSearchTypeSerializer(read_only=True)
-    subreddit = RedditSubredditSerializer(read_only=True)
+    search_type = RedditSearchTypeSerializer(read_only=True, many=True)
+    subreddit = RedditSubredditSerializer(read_only=True, many=True)
 
     class Meta:
         model = RedditQuestion
