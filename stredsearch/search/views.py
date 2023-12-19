@@ -578,15 +578,31 @@ class GetRedditData(APIView):
         return Response(results)
 
 
-class StackSearchResponseView(generics.ListCreateAPIView):
-    search_fields = ["title", "tags__tag_name"]
-    filter_backends = (filters.SearchFilter,)
-    queryset = StackQuestion.objects.all()
-    serializer_class = StackSearchQuerySerializer
+class StackSearchResponseView(APIView):
+    def get(self, request, term):
+        print(term)
+        # search_history = StackQuestion.objects.filter(title__icontains=term)
+        # results = StackSearchQuerySerializer(search_history, many=True).data
+        # return Response(results)
 
 
-class RedditSearchResponseView(generics.ListCreateAPIView):
-    search_fields = ["title", "subreddit__subreddit_name"]
-    filter_backends = (filters.SearchFilter,)
-    queryset = RedditQuestion.objects.all()
-    serializer_class = RedditSearchQuerySerializerForFiltering
+class RedditSearchResponseView(APIView):
+    def get(self, request, term):
+        print(term)
+        # search_history = RedditQuestion.objects.filter(title__icontains=term)
+        # results = RedditSearchQuerySerializer(search_history, many=True).data
+        # return Response(results)
+
+
+# class StackSearchResponseView(generics.ListCreateAPIView):
+#     search_fields = ["title", "tags__tag_name"]
+#     filter_backends = (filters.SearchFilter,)
+#     queryset = StackQuestion.objects.all()
+#     serializer_class = StackSearchQuerySerializer
+
+
+# class RedditSearchResponseView(generics.ListCreateAPIView):
+#     search_fields = ["title", "subreddit__subreddit_name"]
+#     filter_backends = (filters.SearchFilter,)
+#     queryset = RedditQuestion.objects.all()
+#     serializer_class = RedditSearchQuerySerializerForFiltering

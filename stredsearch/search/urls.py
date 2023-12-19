@@ -91,12 +91,12 @@ urlpatterns = [
         name="InitialiseDatabase",
     ),
     path(
-        "search/stackoverflow/",
+        "search/stackoverflow/<str:term>/",
         views.StackSearchResponseView.as_view(),
         name="StackOverflowSearch",
     ),
     path(
-        "search/reddit/",
+        "search/reddit/<str:term>/",
         views.RedditSearchResponseView.as_view(),
         name="RedditSearch",
     ),
