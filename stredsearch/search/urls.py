@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework import renderers
 from rest_framework.urlpatterns import format_suffix_patterns
 from search import views
 
@@ -93,13 +94,18 @@ urlpatterns = [
     path(
         "search/stackoverflow/<str:term>/",
         views.StackSearchResponseView.as_view(),
-        name="StackOverflowSearch",
+        name="StackOverflowSearchList",
     ),
     path(
         "search/reddit/<str:term>/",
         views.RedditSearchResponseView.as_view(),
-        name="RedditSearch",
+        name="RedditSearchList",
     ),
+    # path(
+    #     "search/reddit/",
+    #     reddit_search_list,
+    #     name="RedditSearchList",
+    # ),
     path("get-details/", views.UserDetailView.as_view(), name="UserDetail"),
     path("register/", views.RegisterUserView.as_view(), name="RegisterUser"),
     path(

@@ -1,17 +1,16 @@
-from multiprocessing import Value, process
-from re import A
+from itertools import chain
 from urllib.error import HTTPError
 
 import django_rq
-import html5lib
-import requests
 from django.contrib.auth.models import User
 from django.http import *
-from rest_framework import filters, generics, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from search.databaseinitialisation import DatabaseInitialisation
 from search.helperfunctions import processFilters
 from search.models import *
@@ -580,29 +579,63 @@ class GetRedditData(APIView):
 
 class StackSearchResponseView(APIView):
     def get(self, request, term):
-        print(term)
-        # search_history = StackQuestion.objects.filter(title__icontains=term)
-        # results = StackSearchQuerySerializer(search_history, many=True).data
-        # return Response(results)
+        print(f"Stack Term: {term}")
+        tags_query_set = StackQuestion.objects.filter(tags__tag_name__icontains=term)
+        title_query_set = StackQuestion.objects.filter(title__icontains=term)
+        queryset = list(chain(tags_query_set, title_query_set))
+        serialized_results = StackSearchQuerySerializer(queryset, many=True).data
+        processed_results = []
+
+        for elem in serialized_results:
+            print(elem["tags"])
+            tags = None
+            if len(elem["tags"]) > 1:
+                tags = ", ".join(elem["tags"])
+            else:
+                tags = elem["tags"][0]
+
+            processed_results.append(
+                {
+                    "title": elem["title"],
+                    "link": elem["link"],
+                    "tags": tags,
+                    "accepted": elem["is_answered"],
+                    "display_name": elem["owner"][1],
+                    "user_id": elem["owner"][0],
+                    "is_answered": elem["is_answered"],
+                    "answer_count": elem["answer_count"],
+                    "score": elem["score"],
+                    "creation_date": elem["creation_date"],
+                    "last_activity_date": elem["last_activity_date"],
+                }
+            )
+        return Response(processed_results)
 
 
 class RedditSearchResponseView(APIView):
     def get(self, request, term):
-        print(term)
-        # search_history = RedditQuestion.objects.filter(title__icontains=term)
-        # results = RedditSearchQuerySerializer(search_history, many=True).data
-        # return Response(results)
+        tags_query_set = RedditQuestion.objects.filter(
+            subreddit__subreddit_name__icontains=term
+        )
+        title_query_set = RedditQuestion.objects.filter(title__icontains=term)
+        queryset = list(chain(tags_query_set, title_query_set))
+        serialized_results = RedditSearchQuerySerializer(queryset, many=True).data
+        processed_results = []
 
-
-# class StackSearchResponseView(generics.ListCreateAPIView):
-#     search_fields = ["title", "tags__tag_name"]
-#     filter_backends = (filters.SearchFilter,)
-#     queryset = StackQuestion.objects.all()
-#     serializer_class = StackSearchQuerySerializer
-
-
-# class RedditSearchResponseView(generics.ListCreateAPIView):
-#     search_fields = ["title", "subreddit__subreddit_name"]
-#     filter_backends = (filters.SearchFilter,)
-#     queryset = RedditQuestion.objects.all()
-#     serializer_class = RedditSearchQuerySerializerForFiltering
+        # for elem in serialized_results:
+        #     processed_results.append(
+        #         {
+        #             "title": elem["title"],
+        #             "link": elem["link"],
+        #             "tags": elem["tags"].join(", "),
+        #             "accepted": elem["is_answered"],
+        #             "display_name": elem["owner"][1],
+        #             "user_id": elem["owner"][0],
+        #             "is_answered": elem["is_answered"],
+        #             "answer_count": elem["answer_count"],
+        #             "score": elem["score"],
+        #             "creation_date": elem["creation_date"],
+        #             "last_activity_date": elem["last_activity_date"],
+        #         }
+        #     )
+        return Response(serialized_results)

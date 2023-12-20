@@ -35,10 +35,28 @@ class StackOwnerSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class StackOwnerSerializerLocalSearch(serializers.ModelSerializer):
+    class Meta:
+        model = StackUser
+        fields = ["user_id", "display_name"]
+
+    def to_representation(self, instance):
+        return (instance.user_id, instance.display_name)
+
+
 class StackQuestionTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = StackTags
         fields = "__all__"
+
+
+class StackQuestionTagSerializerLocalSearch(serializers.ModelSerializer):
+    class Meta:
+        model = StackTags
+        fields = ["id", "tag_name"]
+
+    def to_representation(self, instance):
+        return instance.tag_name
 
 
 class StackQuestionSerializer(serializers.ModelSerializer):
@@ -178,23 +196,21 @@ class RedditSearchQuerySerializerForFiltering(serializers.Serializer):
     subreddit = serializers.CharField(max_length=500)
 
 
-class StackSearchQuerySerializer(serializers.Serializer):
-    tags = serializers.CharField()
-    is_answered = serializers.BooleanField()
-    view_count = serializers.IntegerField()
-    answer_count = serializers.IntegerField()
-    score = serializers.IntegerField()
-    # There may never have been activity on the question
-    last_activity_date = serializers.DateTimeField(required=False)
-    creation_date = serializers.DateTimeField()
-    # The question may never have been edited
-    last_edit_date = serializers.DateTimeField(required=False)
-    question_id = serializers.IntegerField()
-    link = serializers.CharField(max_length=500)
-    title = serializers.CharField(max_length=500)
-    # user may have deleted account, questions with this occurence do not return a user_id and will throw an error if the field presence is enforeced
-    user_id = serializers.IntegerField(required=False)
-    display_name = serializers.CharField(max_length=500, required=False)
+class StackSearchQuerySerializer(serializers.ModelSerializer):
+    tags = StackQuestionTagSerializerLocalSearch(read_only=True, many=True)
+    owner = StackOwnerSerializerLocalSearch(read_only=True)
+
+    class Meta:
+        model = StackQuestion
+        fields = "__all__"
+
+
+class RedditSearchQuerySerializer(serializers.ModelSerializer):
+    subreddit = RedditSubredditSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = RedditQuestion
+        fields = "__all__"
 
 
 class StackSearchErrorSerializer(serializers.Serializer):
