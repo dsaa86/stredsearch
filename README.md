@@ -1,5 +1,7 @@
 # StredSearch
 
+## PROJECT FILES CAN BE LOCATED IN THE 'STREDSEARCH' DIRECTORY, PREDOMINANTLY WITHIN THE 'SEARCH' APP OF DJANGO
+
 ## A Unified Search Interface for StackOverflow and Reddit
 
 StredSearch is a web application developed using Django and Django Restframework, aimed at facilitating simultaneous searches on StackOverflow and Reddit. This project showcases Python web development skills and backend technologies.
